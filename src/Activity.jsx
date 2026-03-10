@@ -1,6 +1,6 @@
 import {useEffect,useState} from "react";
 function Activity() {
-    const[title,SetTile]=useState("");
+    const[title,setTitle]=useState("");
     const [description,setDescription]=useState("");
     const[activities,setActivities]=useState(()=>{
         const saved = localStorage.getItem("activities");
@@ -21,7 +21,7 @@ function Activity() {
                 description :description
              };
             setActivities([...activities, newActivity]);
-            SetTile("");
+            setTitle("");
             setDescription("");
         }
         const deleteActivities = (id)=>{
@@ -30,8 +30,29 @@ function Activity() {
     
     return (
         <div>
-            <h1> Welcome to the Activity Tracker</h1>
+            <h3> Welcome to the Activity Tracker</h3>
             <p>Track your physical activities and workouts here.</p>
+            <input
+            value={title}
+            onChange={(e)=>setTitle(e.target.value)}
+            placeholder="Activity Title"
+            />
+            <input
+            value={description}
+            onChange={(e)=>setDescription(e.target.value)}
+            placeholder="Activity Description"
+            />
+            <button onClick={addActivity}>Add Activity</button>
+            <ul>
+                {activities.map(activity=>(
+                   <li key={activity.id}>
+                    {activity.title} :{activity.description}
+                    <button onClick={() => deleteActivities(activity.id)}>Delete</button>
+                   </li>)
+
+
+                )}
+            </ul>
         </div>
     );
 }

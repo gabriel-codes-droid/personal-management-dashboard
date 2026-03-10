@@ -36,7 +36,7 @@ const totalIncome = transactions
 
 const totalExpense= transactions
 .filter(transaction=>transaction.amount<0)
-.reduce((total,transaction)=>total+Mnath.abs(transaction.amount),0);
+.reduce((total,transaction)=>total+Math.abs(transaction.amount),0);
     return(
         <div>
         <h2>Welcome to our PMD Finance Tracker</h2>
