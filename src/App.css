@@ -1,42 +1,52 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* 1. Centering the Header & Content */
+.dashboard-container {
+  text-align: center; /* This centers the H1, H2, and the group of boxes */
+  padding: 20px;
+  color: white;
+}
+
+/* 2. Fixing the Navigation Links */
+nav {
   text-align: center;
+  padding: 20px;
+  background: #222; /* Darker background for the nav bar */
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+nav a {
+  color: #646cff;    /* Bright Blue so you can finally see them! */
+  text-decoration: none;
+  margin: 0 15px;
+  font-weight: bold;
+  font-size: 1.1rem;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+nav a:hover {
+  color: #ffffff;    /* Turns white when you hover over them */
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* 3. The Dashboard Boxes (Keep content left-aligned) */
+.finance, .activity, .meal {
+  width: 31%;
+  height: 450px;
+  padding: 25px;
+  border-radius: 12px;
+  margin: 1%;
+  display: inline-block;
+  vertical-align: top;
+  box-sizing: border-box;
+  background-color: #1a1a1a;
+  color: #ffffff;
+  overflow-y: auto;
+  
+  /* THIS PART: Keeps text inside the boxes on the left */
+  text-align: left; 
+  border: 1px solid #333;
 }
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+/* Optional: Make the Headlines bigger */
+h2, h3 {
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align:center;
 }

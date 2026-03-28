@@ -1,3 +1,4 @@
+import './App.css';
 import {useEffect,useState} from "react";
 function Activity() {
     const[title,setTitle]=useState("");

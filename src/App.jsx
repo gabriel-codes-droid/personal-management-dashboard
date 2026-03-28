@@ -3,6 +3,7 @@ import Home from "./Home";
 import Finance from "./Finance";
 import Meals from "./Meals";
 import Activity from "./Activity";
+import './App.css';
 function App(){
   return(
     <>
