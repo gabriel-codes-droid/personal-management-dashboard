@@ -1,7 +1,7 @@
 import './App.css';
 import {useEffect,useState} from "react";
 function Activity() {
-    const[title,setTitle]=useState("");
+    const[title,setTitle]=useState(""); 
     const [description,setDescription]=useState("");
     const[activities,setActivities]=useState(()=>{
         const saved = localStorage.getItem("activities");
