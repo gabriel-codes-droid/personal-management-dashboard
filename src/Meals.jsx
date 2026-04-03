@@ -10,7 +10,6 @@ function Meals(){
     useEffect(()=>{
         localStorage.setItem("meals",JSON.stringify(meals))
     },[meals]);
-
     const addMeal =()=>{
         if(title.trim()===""|| calories.trim()===""){
             alert("please fill in these fields")
