@@ -1,19 +1,26 @@
-import {BrowserRouter as Router, Routes, Route,Link} from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import Home from "./Home";
 import Finance from "./Finance";
 import Meals from "./Meals";
 import Activity from "./Activity";
 import './App.css';
-function App(){
-  return(
-    <>
+
+function Nav() {
+  const navigate = useNavigate();
+  return (
+    <nav>
+      <button onClick={() => navigate("/")}>Home</button>
+      <button onClick={() => navigate("/finance")}>Finance Tracker</button>
+      <button onClick={() => navigate("/meals")}>Meal & Calorie Tracker</button>
+      <button onClick={() => navigate("/activity")}>Activity Tracker</button>
+    </nav>
+  );
+}
+
+function App() {
+  return (
     <Router>
-      <nav>
-       <button> <Link to ="/">Home</Link></button>
-        <button> <Link to ="/finance">Finance Tracker</Link></button>
-        <button> <Link to="/meals">Meal&Calorie Tracker</Link></button>
-        <button> <Link to ="/activity">Activity Tracker</Link></button>
-      </nav>
+      <Nav />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/finance" element={<Finance />} />
@@ -21,8 +28,7 @@ function App(){
         <Route path="/activity" element={<Activity />} />
       </Routes>
     </Router>
-    </>
-    
-  )
+  );
 }
+
 export default App;
