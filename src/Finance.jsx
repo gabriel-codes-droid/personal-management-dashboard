@@ -38,7 +38,7 @@ const totalExpense= transactions
 .filter(transaction=>transaction.amount<0)
 .reduce((total,transaction)=>total+Math.abs(transaction.amount),0);
     return(
-        <div>
+        <div className ="page-container">
         <h2>Welcome to our PMD Finance Tracker</h2>
         <h3>Total Balance: ${totalBalance}</h3>
         <h3>Total Income: ${totalIncome}</h3>
@@ -48,7 +48,8 @@ const totalExpense= transactions
         placeholder="Description"
         value={description}
         onChange={e=>setDescription(e.target.value)}
-        /><br/>
+        /><br/><br/>
+         <div className="form-group">
         <input 
         type="number"
         placeholder="Amount"
@@ -56,7 +57,9 @@ const totalExpense= transactions
         onChange={e=>setAmount(e.target.value)}
         /><br/>
         <button onClick={addTransaction}>Add a new Transaction</button>
+        </div>
         <ul>
+            
         {transactions.map(transaction => (
           <li key={transaction.id}>
             {transaction.description} : {transaction.amount}

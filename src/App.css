@@ -8,6 +8,7 @@ nav {
   padding: 20px;
   background: #222;
   gap: 15px;
+  width: 100%;
 }
 
 nav a, nav button {
@@ -37,11 +38,20 @@ nav a.active, nav button.active {
   box-shadow: 0 0 16px rgba(100, 108, 255, 0.8);
 }
 
+/* Global Center */
+#root {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 /* Dashboard Container */
 .dashboard-container {
   text-align: center;
   padding: 20px;
   color: white;
+  width: 100%;
 }
 
 /* Dashboard Boxes */
@@ -67,4 +77,49 @@ h2, h3 {
   text-transform: uppercase;
   letter-spacing: 1px;
   text-align: center;
+}
+/* Page Container */
+.page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 20px;
+  color: white;
+}
+
+/* Form Group */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.form-group input {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #646cff;
+  background: #1a1a1a;
+  color: white;
+  width: 250px;
+}
+
+.form-group button {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 2px solid #646cff;
+  background: transparent;
+  color: #646cff;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(100, 108, 255, 0.4);
+  transition: all 0.2s ease;
+}
+
+.form-group button:hover {
+  color: #ffffff;
+  border-color: #ffffff;
+  box-shadow: 0 0 16px rgba(100, 108, 255, 0.8);
 }
