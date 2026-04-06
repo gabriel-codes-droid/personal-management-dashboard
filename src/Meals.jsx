@@ -1,65 +1,212 @@
-import { useEffect,useState } from 'react';
-import './App.css';
-function Meals(){
-    const[title,setTitle]=useState("");
-    const[calories,setCalories]=useState("");
-    const[meals,setMeals]=useState(()=>{
-    const saved = localStorage.getItem("meals");
-    return saved ?JSON.parse(saved) :[];
+import { useEffect, useState } from 'react';
+
+function Meals() {
+    const [mode, setMode] = useState("search");
+    const [query, setQuery] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    // Manual mode
+    const [manualTitle, setManualTitle] = useState("");
+    const [manualCalories, setManualCalories] = useState("");
+
+    // Build a dish mode
+    const [dishName, setDishName] = useState("");
+    const [ingredientName, setIngredientName] = useState("");
+    const [ingredientCalories, setIngredientCalories] = useState("");
+    const [ingredients, setIngredients] = useState([]);
+
+    const [meals, setMeals] = useState(() => {
+        const saved = localStorage.getItem("meals");
+        return saved ? JSON.parse(saved) : [];
     });
-    useEffect(()=>{
-        localStorage.setItem("meals",JSON.stringify(meals))
-    },[meals]);
-    const addMeal =()=>{
-        if(title.trim()===""|| calories.trim()===""){
-            alert("please fill in these fields")
+
+    useEffect(() => {
+        localStorage.setItem("meals", JSON.stringify(meals));
+    }, [meals]);
+
+    // Search mode
+    const searchFood = async () => {
+        if (query.trim() === "") return;
+        setLoading(true);
+        setError("");
+        setSearchResults([]);
+        try {
+            const response = await fetch(
+                `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${query}&search_simple=1&action=process&json=1&page_size=5`
+            );
+            const data = await response.json();
+            const results = data.products
+                .filter(p => p.product_name && p.nutriments?.["energy-kcal_100g"])
+                .map(p => ({
+                    name: p.product_name,
+                    calories: Math.round(p.nutriments["energy-kcal_100g"])
+                }));
+            if (results.length === 0) setError("No results found, try a different name");
+            setSearchResults(results);
+        } catch (err) {
+            setError("Something went wrong, try again");
+        }
+        setLoading(false);
+    };
+
+    const addMealFromSearch = (meal) => {
+        setMeals(prev => [...prev, { id: Date.now(), title: meal.name, calories: meal.calories }]);
+        setSearchResults([]);
+        setQuery("");
+    };
+
+    // Manual mode
+    const addMealManually = () => {
+        if (manualTitle.trim() === "" || manualCalories === "") {
+            alert("Please fill in both fields");
             return;
-        } 
-         const newMeal={
-        id:Date.now(),
-        title:title,
-        calories:calories
-    }
-    setMeals([...meals, newMeal]);
-    setTitle("");
-    setCalories("");
-    
-    }
-    const deleteMeal =(id)=>{
-        setMeals(prev=>prev.filter(meals=>meals.id!==id))
-    }
-  
+        }
+        setMeals(prev => [...prev, { id: Date.now(), title: manualTitle, calories: Number(manualCalories) }]);
+        setManualTitle("");
+        setManualCalories("");
+    };
 
-    return(
-        <>
-        <h3>Hi this is our meal tracker:</h3>
-        <input
-        value={title}
-        onChange={(e)=>setTitle(e.target.value)}
-        placeholder="Meal name"
-         />
-         <br/>
-         <input
-         type="number"
-        value={calories}
-        onChange={(e)=>setCalories(e.target.value)}
-        placeholder="Number"
-         />
-         <br/>
-         <button onClick={addMeal}>Add a Meal</button>
-        <ul>
-           {meals.map(meal=>(
-            <li key={meal.id}>
-                {meal.title} :{meal.calories}
-                <button onClick={() => deleteMeal(meal.id)}>Delete this Meal</button>
-                   
-            </li>)
-           )}
-        </ul>
+    // Build a dish mode
+    const addIngredient = () => {
+        if (ingredientName.trim() === "" || ingredientCalories === "") {
+            alert("Please fill in both ingredient fields");
+            return;
+        }
+        setIngredients(prev => [...prev, { name: ingredientName, calories: Number(ingredientCalories) }]);
+        setIngredientName("");
+        setIngredientCalories("");
+    };
 
+    const addDish = () => {
+        if (dishName.trim() === "" || ingredients.length === 0) {
+            alert("Please enter a dish name and at least one ingredient");
+            return;
+        }
+        const totalCals = ingredients.reduce((sum, ing) => sum + ing.calories, 0);
+        setMeals(prev => [...prev, { id: Date.now(), title: dishName, calories: totalCals }]);
+        setDishName("");
+        setIngredients([]);
+    };
 
+    const deleteMeal = (id) => {
+        setMeals(prev => prev.filter(meal => meal.id !== id));
+    };
 
-        </> 
+    const totalCalories = meals.reduce((total, meal) => total + Number(meal.calories), 0);
+
+    return (
+        <div className="page-container">
+            <h2>PMD Meal & Calorie Tracker</h2>
+            <h3>Total Calories: {totalCalories} kcal</h3>
+
+            {/* Dropdown */}
+            <div className="form-group">
+                <select
+                    value={mode}
+                    onChange={(e) => setMode(e.target.value)}
+                    className="mode-select"
+                >
+                    <option value="search">🔍 Search Food API</option>
+                    <option value="manual">✏️ Add Manually</option>
+                    <option value="dish">🍽️ Build a Dish</option>
+                </select>
+            </div>
+
+            {/* Search Mode */}
+            {mode === "search" && (
+                <div className="form-group">
+                    <input
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Search for a meal..."
+                        onKeyDown={(e) => e.key === "Enter" && searchFood()}
+                    />
+                    <button onClick={searchFood}>Search</button>
+                    {loading && <p style={{ color: "#646cff" }}>Searching...</p>}
+                    {error && <p style={{ color: "red" }}>{error}</p>}
+                    {searchResults.length > 0 && (
+                        <ul className="search-results">
+                            {searchResults.map((result, index) => (
+                                <li key={index}>
+                                    {result.name} — {result.calories} kcal/100g
+                                    <button onClick={() => addMealFromSearch(result)}>Add</button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+            )}
+
+            {/* Manual Mode */}
+            {mode === "manual" && (
+                <div className="form-group">
+                    <input
+                        value={manualTitle}
+                        onChange={(e) => setManualTitle(e.target.value)}
+                        placeholder="Meal name"
+                    />
+                    <input
+                        type="number"
+                        value={manualCalories}
+                        onChange={(e) => setManualCalories(e.target.value)}
+                        placeholder="Calories (kcal)"
+                    />
+                    <button onClick={addMealManually}>Add Meal</button>
+                </div>
+            )}
+
+            {/* Build a Dish Mode */}
+            {mode === "dish" && (
+                <div className="form-group">
+                    <input
+                        value={dishName}
+                        onChange={(e) => setDishName(e.target.value)}
+                        placeholder="Dish name e.g. Chicken Stew"
+                    />
+                    <hr style={{ width: "100%", borderColor: "#333" }} />
+                    <input
+                        value={ingredientName}
+                        onChange={(e) => setIngredientName(e.target.value)}
+                        placeholder="Ingredient name"
+                    />
+                    <input
+                        type="number"
+                        value={ingredientCalories}
+                        onChange={(e) => setIngredientCalories(e.target.value)}
+                        placeholder="Ingredient calories (kcal)"
+                    />
+                    <button onClick={addIngredient}>Add Ingredient</button>
+
+                    {ingredients.length > 0 && (
+                        <ul className="search-results">
+                            {ingredients.map((ing, index) => (
+                                <li key={index}>
+                                    {ing.name} — {ing.calories} kcal
+                                    <button onClick={() => setIngredients(prev => prev.filter((_, i) => i !== index))}>Remove</button>
+                                </li>
+                            ))}
+                            <li style={{ fontWeight: "bold" }}>
+                                Total: {ingredients.reduce((sum, ing) => sum + ing.calories, 0)} kcal
+                            </li>
+                        </ul>
+                    )}
+                    <button onClick={addDish}>Add Dish to Meals</button>
+                </div>
+            )}
+
+            {/* Meals List */}
+            <h3>My Meals:</h3>
+            <ul className="meals-list">
+                {meals.map(meal => (
+                    <li key={meal.id}>
+                        {meal.title} : {meal.calories} kcal
+                        <button onClick={() => deleteMeal(meal.id)}>Delete</button>
+                    </li>
+                ))}
+            </ul>
+        </div>
     );
 }
 export default Meals;
