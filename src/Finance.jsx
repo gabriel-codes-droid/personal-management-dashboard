@@ -1,75 +1,77 @@
-import {useState ,useEffect} from "react";
+import {useState, useEffect} from "react";
+
 function Finance(){
-    const [transactions,setTransactions]=useState(()=>{
+    const [transactions, setTransactions] = useState(()=>{
         const saved = localStorage.getItem("transactions");
-        return saved ?JSON.parse(saved) :[];
+        return saved ? JSON.parse(saved) : [];
     });
-    const[description,setDescription]=useState("");
-    const[amount,setAmount]=useState("");
-     useEffect(()=>{
-        localStorage.setItem("transactions",JSON.stringify(transactions))},
-    [transactions]);
-    const addTransaction =()=>{
-        if(description.trim()=== ""|| amount==="") return;
+    const [description, setDescription] = useState("");
+    const [amount, setAmount] = useState("");
 
-        const newTransaction ={
-            id:Date.now(),
-            description:description,
-            amount:Number(amount)
+    useEffect(()=>{
+        localStorage.setItem("transactions", JSON.stringify(transactions))
+    }, [transactions]);
+
+    const addTransaction = () => {
+        if(description.trim() === "" || amount === "") return;
+        const newTransaction = {
+            id: Date.now(),
+            description: description,
+            amount: Number(amount)
         };
-
-        setTransactions(prev=>[...prev,newTransaction]);
+        setTransactions(prev => [...prev, newTransaction]);
         setDescription("");
-        setAmount("")
+        setAmount("");
     };
-    const deleteTransaction =(id)=>{
-setTransactions(
-    prev=>prev.filter(transaction=>transaction.id!==id)
-); }
 
-   const totalBalance =
-transactions.reduce((total,transaction)=>total+transaction.amount,0);
+    const deleteTransaction = (id) => {
+        setTransactions(prev => prev.filter(transaction => transaction.id !== id));
+    }
 
-const totalIncome = transactions
-.filter(transaction=>transaction.amount>0)
-.reduce((total,transaction)=>total+transaction.amount,0);
+    const totalBalance = transactions.reduce((total, t) => total + t.amount, 0);
+    const totalIncome = transactions.filter(t => t.amount > 0).reduce((total, t) => total + t.amount, 0);
+    const totalExpense = transactions.filter(t => t.amount < 0).reduce((total, t) => total + Math.abs(t.amount), 0);
 
-const totalExpense= transactions
-.filter(transaction=>transaction.amount<0)
-.reduce((total,transaction)=>total+Math.abs(transaction.amount),0);
     return(
-        <div className ="page-container">
-        <h2>Welcome to our PMD Finance Tracker</h2>
-        <h3>Total Balance: ${totalBalance}</h3>
-        <h3>Total Income: ${totalIncome}</h3>
-        <h3>Total Expense: ${totalExpense}</h3>
-        <input
-        type="text"
-        placeholder="Description"
-        value={description}
-        onChange={e=>setDescription(e.target.value)}
-        /><br/><br/>
-         <div className="form-group">
-        <input 
-        type="number"
-        placeholder="Amount"
-        value={amount}
-        onChange={e=>setAmount(e.target.value)}
-        /><br/>
-        <button onClick={addTransaction}>Add a new Transaction</button>
-        </div>
-        <ul>
-            
-        {transactions.map(transaction => (
-          <li key={transaction.id}>
-            {transaction.description} : {transaction.amount}
-            <button onClick={() => deleteTransaction(transaction.id)}>
-              Delete
-            </button>
-          </li>
-        ))}
-      </ul>
-    
+        <div className="page-container">
+            <h2>Welcome to our PMD Finance Tracker</h2>
+
+            {/* Balance color changes based on positive/negative */}
+            <h3 style={{ color: totalBalance >= 0 ? "#00cc66" : "#ff4444" }}>
+                Total Balance: ${totalBalance}
+            </h3>
+            <h3 style={{ color: "#00cc66" }}>Total Income: ${totalIncome}</h3>
+            <h3 style={{ color: "#ff4444" }}>Total Expense: ${totalExpense}</h3>
+
+            <div className="form-group">
+                <input
+                    type="text"
+                    placeholder="Description"
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                />
+                <input
+                    type="number"
+                    placeholder="Amount (negative for expense e.g. -50)"
+                    value={amount}
+                    onChange={e => setAmount(e.target.value)}
+                />
+                <button onClick={addTransaction}>Add a new Transaction</button>
+            </div>
+
+            <ul className="meals-list">
+                {transactions.map(transaction => (
+                    <li key={transaction.id} style={{
+                        borderColor: transaction.amount >= 0 ? "#00cc66" : "#ff4444"
+                    }}>
+                        <span style={{ color: transaction.amount >= 0 ? "#00cc66" : "#ff4444" }}>
+                            {transaction.amount >= 0 ? "+" : ""}{transaction.amount}$
+                        </span>
+                        <span>{transaction.description}</span>
+                        <button onClick={() => deleteTransaction(transaction.id)}>Delete</button>
+                    </li>
+                ))}
+            </ul>
         </div>
     )
 }

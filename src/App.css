@@ -141,3 +141,40 @@ h2, h3 {
   border-color: #ffffff;
   color: #ffffff;
 }
+/* Search Results & Meals List */
+.search-results, .meals-list {
+  list-style: none;
+  padding: 0;
+  width: 50%;
+  margin: 10px auto;
+}
+
+.search-results li, .meals-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  margin: 8px 0;
+  background: #1a1a1a;
+  border: 2px solid #333;
+  border-radius: 10px;
+  color: white;
+}
+
+.search-results li button, .meals-list li button {
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 2px solid #646cff;
+  background: transparent;
+  color: #646cff;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(100, 108, 255, 0.4);
+  transition: all 0.2s ease;
+}
+
+.search-results li button:hover, .meals-list li button:hover {
+  color: #ffffff;
+  border-color: #ffffff;
+  box-shadow: 0 0 14px rgba(100, 108, 255, 0.8);
+}
