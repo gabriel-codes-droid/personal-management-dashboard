@@ -1,25 +1,32 @@
 import { useState, useRef } from "react";
 
-function useDeleteWithUndo() {
+function useDeleteWithUndo(itemType) {
     const [deletedItem, setDeletedItem] = useState(null);
     const [showToast, setShowToast] = useState(false);
     const timerRef = useRef(null);
 
-    const triggerDelete = (item, onConfirmDelete) => {
-        setDeletedItem({ item, onConfirmDelete });
+    const triggerDelete = (item) => {
+        setDeletedItem({ item });
     };
 
     const confirmDelete = (list, setList) => {
         if (!deletedItem) return;
 
-        // Remove item from list
+        // Remove from list
         const updated = list.filter(i => i.id !== deletedItem.item.id);
         setList(updated);
 
+        // Save to trash
+        const trash = JSON.parse(localStorage.getItem("trash") || "[]");
+        trash.push({
+            ...deletedItem.item,
+            itemType,
+            deletedAt: new Date().toLocaleString()
+        });
+        localStorage.setItem("trash", JSON.stringify(trash));
+
         // Show toast
         setShowToast(true);
-
-        // Auto hide toast after 4 seconds
         timerRef.current = setTimeout(() => {
             setShowToast(false);
             setDeletedItem(null);
@@ -29,8 +36,14 @@ function useDeleteWithUndo() {
     const undoDelete = (list, setList) => {
         if (!deletedItem) return;
 
-        // Restore item
-        setList([...list, deletedItem.item]);
+        // Restore to list
+        setList(prev => [...prev, deletedItem.item]);
+
+        // Remove from trash
+        const trash = JSON.parse(localStorage.getItem("trash") || "[]");
+        const updated = trash.filter(i => i.id !== deletedItem.item.id);
+        localStorage.setItem("trash", JSON.stringify(updated));
+
         setShowToast(false);
         setDeletedItem(null);
         clearTimeout(timerRef.current);
