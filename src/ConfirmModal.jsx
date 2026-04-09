@@ -1,6 +1,9 @@
 function ConfirmModal({ item, onConfirm, onCancel }) {
     if (!item) return null;
 
+    // handles all possible item types
+    const itemName = item.title || item.description || item.name || item.message || "this item";
+
     return (
         <div style={{
             position: "fixed",
@@ -24,7 +27,7 @@ function ConfirmModal({ item, onConfirm, onCancel }) {
             }}>
                 <p style={{ fontSize: "1.3rem" }}>🗑️ <strong>Delete Item?</strong></p>
                 <p style={{ color: "#ccc", margin: "12px 0", fontSize: "0.95rem" }}>
-                    Are you sure you want to delete <strong style={{ color: "white" }}>"{item.title || item.description || item.name || "this item"}"</strong>? This can be undone.
+                    Are you sure you want to delete <strong style={{ color: "white" }}>"{itemName}"</strong>? This can be undone.
                 </p>
                 <div style={{ display: "flex", gap: "12px", justifyContent: "center", marginTop: "20px" }}>
                     <button onClick={onCancel} style={{
