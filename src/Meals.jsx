@@ -20,7 +20,7 @@ function Meals() {
     const [ingredientCalories, setIngredientCalories] = useState("");
     const [ingredients, setIngredients] = useState([]);
 
-    const { deletedItem, showToast, triggerDelete, confirmDelete, undoDelete, setDeletedItem } = useDeleteWithUndo();
+    const { deletedItem, showToast, triggerDelete, confirmDelete, undoDelete, setDeletedItem } = useDeleteWithUndo("meal");
 
     useEffect(() => {
         localStorage.setItem("meals", JSON.stringify(meals));
