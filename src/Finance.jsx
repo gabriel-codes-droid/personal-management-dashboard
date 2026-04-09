@@ -11,7 +11,7 @@ function Finance() {
     const [description, setDescription] = useState("");
     const [amount, setAmount] = useState("");
 
-    const { deletedItem, showToast, triggerDelete, confirmDelete, undoDelete, setDeletedItem } = useDeleteWithUndo();
+    const { deletedItem, showToast, triggerDelete, confirmDelete, undoDelete, setDeletedItem } = useDeleteWithUndo("transaction");
 
     useEffect(() => {
         localStorage.setItem("transactions", JSON.stringify(transactions));
