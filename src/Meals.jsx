@@ -1,32 +1,31 @@
 import { useEffect, useState } from 'react';
+import ConfirmModal from "./ConfirmModal";
+import Toast from "./Toast";
+import useDeleteWithUndo from "./useDeleteWithUndo";
 
 function Meals() {
-    const [mode, setMode] = useState("search");
     const [query, setQuery] = useState("");
+    const [meals, setMeals] = useState(() => {
+        const saved = localStorage.getItem("meals");
+        return saved ? JSON.parse(saved) : [];
+    });
     const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-
-    // Manual mode
+    const [mode, setMode] = useState("search");
     const [manualTitle, setManualTitle] = useState("");
     const [manualCalories, setManualCalories] = useState("");
-
-    // Build a dish mode
     const [dishName, setDishName] = useState("");
     const [ingredientName, setIngredientName] = useState("");
     const [ingredientCalories, setIngredientCalories] = useState("");
     const [ingredients, setIngredients] = useState([]);
 
-    const [meals, setMeals] = useState(() => {
-        const saved = localStorage.getItem("meals");
-        return saved ? JSON.parse(saved) : [];
-    });
+    const { deletedItem, showToast, triggerDelete, confirmDelete, undoDelete, setDeletedItem } = useDeleteWithUndo();
 
     useEffect(() => {
         localStorage.setItem("meals", JSON.stringify(meals));
     }, [meals]);
 
-    // Search mode
     const searchFood = async () => {
         if (query.trim() === "") return;
         setLoading(true);
@@ -40,12 +39,13 @@ function Meals() {
             const results = data.products
                 .filter(p => p.product_name && p.nutriments?.["energy-kcal_100g"])
                 .map(p => ({
+                    id: Date.now() + Math.random(),
                     name: p.product_name,
                     calories: Math.round(p.nutriments["energy-kcal_100g"])
                 }));
             if (results.length === 0) setError("No results found, try a different name");
             setSearchResults(results);
-        } catch (err) {
+        } catch {
             setError("Something went wrong, try again");
         }
         setLoading(false);
@@ -57,7 +57,6 @@ function Meals() {
         setQuery("");
     };
 
-    // Manual mode
     const addMealManually = () => {
         if (manualTitle.trim() === "" || manualCalories === "") {
             alert("Please fill in both fields");
@@ -68,7 +67,6 @@ function Meals() {
         setManualCalories("");
     };
 
-    // Build a dish mode
     const addIngredient = () => {
         if (ingredientName.trim() === "" || ingredientCalories === "") {
             alert("Please fill in both ingredient fields");
@@ -90,39 +88,35 @@ function Meals() {
         setIngredients([]);
     };
 
-    const deleteMeal = (id) => {
-        setMeals(prev => prev.filter(meal => meal.id !== id));
-    };
-
     const totalCalories = meals.reduce((total, meal) => total + Number(meal.calories), 0);
 
     return (
         <div className="page-container">
+            <ConfirmModal
+                item={deletedItem?.item}
+                onConfirm={() => confirmDelete(meals, setMeals)}
+                onCancel={() => setDeletedItem(null)}
+            />
+            <Toast
+                show={showToast}
+                message="Meal deleted"
+                onUndo={() => undoDelete(meals, setMeals)}
+            />
+
             <h2>PMD Meal & Calorie Tracker</h2>
             <h3>Total Calories: {totalCalories} kcal</h3>
 
-            {/* Dropdown */}
             <div className="form-group">
-                <select
-                    value={mode}
-                    onChange={(e) => setMode(e.target.value)}
-                    className="mode-select"
-                >
+                <select className="mode-select" value={mode} onChange={(e) => setMode(e.target.value)}>
                     <option value="search">🔍 Search Food API</option>
                     <option value="manual">✏️ Add Manually</option>
                     <option value="dish">🍽️ Build a Dish</option>
                 </select>
             </div>
 
-            {/* Search Mode */}
             {mode === "search" && (
                 <div className="form-group">
-                    <input
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Search for a meal..."
-                        onKeyDown={(e) => e.key === "Enter" && searchFood()}
-                    />
+                    <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search for a meal..." onKeyDown={(e) => e.key === "Enter" && searchFood()} />
                     <button onClick={searchFood}>Search</button>
                     {loading && <p style={{ color: "#646cff" }}>Searching...</p>}
                     {error && <p style={{ color: "red" }}>{error}</p>}
@@ -139,46 +133,21 @@ function Meals() {
                 </div>
             )}
 
-            {/* Manual Mode */}
             {mode === "manual" && (
                 <div className="form-group">
-                    <input
-                        value={manualTitle}
-                        onChange={(e) => setManualTitle(e.target.value)}
-                        placeholder="Meal name"
-                    />
-                    <input
-                        type="number"
-                        value={manualCalories}
-                        onChange={(e) => setManualCalories(e.target.value)}
-                        placeholder="Calories (kcal)"
-                    />
+                    <input value={manualTitle} onChange={(e) => setManualTitle(e.target.value)} placeholder="Meal name" />
+                    <input type="number" value={manualCalories} onChange={(e) => setManualCalories(e.target.value)} placeholder="Calories (kcal)" />
                     <button onClick={addMealManually}>Add Meal</button>
                 </div>
             )}
 
-            {/* Build a Dish Mode */}
             {mode === "dish" && (
                 <div className="form-group">
-                    <input
-                        value={dishName}
-                        onChange={(e) => setDishName(e.target.value)}
-                        placeholder="Dish name e.g. Chicken Stew"
-                    />
+                    <input value={dishName} onChange={(e) => setDishName(e.target.value)} placeholder="Dish name e.g. Chicken Stew" />
                     <hr style={{ width: "100%", borderColor: "#333" }} />
-                    <input
-                        value={ingredientName}
-                        onChange={(e) => setIngredientName(e.target.value)}
-                        placeholder="Ingredient name"
-                    />
-                    <input
-                        type="number"
-                        value={ingredientCalories}
-                        onChange={(e) => setIngredientCalories(e.target.value)}
-                        placeholder="Ingredient calories (kcal)"
-                    />
+                    <input value={ingredientName} onChange={(e) => setIngredientName(e.target.value)} placeholder="Ingredient name" />
+                    <input type="number" value={ingredientCalories} onChange={(e) => setIngredientCalories(e.target.value)} placeholder="Ingredient calories (kcal)" />
                     <button onClick={addIngredient}>Add Ingredient</button>
-
                     {ingredients.length > 0 && (
                         <ul className="search-results">
                             {ingredients.map((ing, index) => (
@@ -187,22 +156,19 @@ function Meals() {
                                     <button onClick={() => setIngredients(prev => prev.filter((_, i) => i !== index))}>Remove</button>
                                 </li>
                             ))}
-                            <li style={{ fontWeight: "bold" }}>
-                                Total: {ingredients.reduce((sum, ing) => sum + ing.calories, 0)} kcal
-                            </li>
+                            <li style={{ fontWeight: "bold" }}>Total: {ingredients.reduce((sum, ing) => sum + ing.calories, 0)} kcal</li>
                         </ul>
                     )}
                     <button onClick={addDish}>Add Dish to Meals</button>
                 </div>
             )}
 
-            {/* Meals List */}
             <h3>My Meals:</h3>
             <ul className="meals-list">
                 {meals.map(meal => (
                     <li key={meal.id}>
                         {meal.title} : {meal.calories} kcal
-                        <button onClick={() => deleteMeal(meal.id)}>Delete</button>
+                        <button onClick={() => triggerDelete(meal)}>Delete</button>
                     </li>
                 ))}
             </ul>
