@@ -1,6 +1,21 @@
 import './App.css';
 import { useState, useEffect } from 'react';
 
+const ProgressBar = ({ value, max, color }) => {
+    const percent = max === 0 ? 0 : Math.min((value / max) * 100, 100);
+    return (
+        <div style={{ background: "#333", borderRadius: "10px", height: "10px", width: "100%", margin: "8px 0" }}>
+            <div style={{
+                width: `${percent}%`,
+                height: "100%",
+                borderRadius: "10px",
+                background: color,
+                transition: "width 0.5s ease"
+            }} />
+        </div>
+    );
+};
+
 function Home() {
     const [totalBalance, setTotalBalance] = useState(0);
     const [totalCalories, setTotalCalories] = useState(0);
@@ -16,7 +31,6 @@ function Home() {
         info: "#646cff"
     };
 
-    // Calorie danger level
     const getCalorieLevel = (calories) => {
         if (calories <= 2000) return { label: "🟢 Healthy", color: "#00cc66" };
         if (calories <= 2500) return { label: "🟡 Moderate", color: "#ffdd00" };
@@ -24,7 +38,6 @@ function Home() {
         return { label: "🔴 Danger", color: "#ff4444" };
     };
 
-    // Finance danger level
     const getFinanceLevel = (balance) => {
         if (balance > 500) return { label: "🟢 Healthy", color: "#00cc66" };
         if (balance > 100) return { label: "🟡 Low", color: "#ffdd00" };
@@ -32,7 +45,6 @@ function Home() {
         return { label: "🔴 Danger", color: "#ff4444" };
     };
 
-    // Activity stress level
     const getStressLevel = (total, done) => {
         const pending = total - done;
         if (pending === 0 && total > 0) return { label: "🟢 All Done!", color: "#00cc66" };
@@ -42,35 +54,15 @@ function Home() {
         return { label: "🔴 Overloaded!", color: "#ff4444" };
     };
 
-    // Progress bar component
-    const ProgressBar = ({ value, max, color }) => {
-        const percent = max === 0 ? 0 : Math.min((value / max) * 100, 100);
-        return (
-            <div style={{ background: "#333", borderRadius: "10px", height: "10px", width: "100%", margin: "8px 0" }}>
-                <div style={{
-                    width: `${percent}%`,
-                    height: "100%",
-                    borderRadius: "10px",
-                    background: color,
-                    transition: "width 0.5s ease"
-                }} />
-            </div>
-        );
-    };
-
     useEffect(() => {
         const transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
         const balance = transactions.reduce((total, t) => total + t.amount, 0);
-        setTotalBalance(balance);
 
         const meals = JSON.parse(localStorage.getItem("meals") || "[]");
         const calories = meals.reduce((total, m) => total + Number(m.calories), 0);
-        setTotalCalories(calories);
 
         const activities = JSON.parse(localStorage.getItem("activities") || "[]");
-        setTotalActivities(activities.length);
         const done = activities.filter(a => a.done).length;
-        setDoneActivities(done);
 
         const generated = [];
 
@@ -97,7 +89,6 @@ function Home() {
         }
 
         // Activity warnings
-        const pending = activities.length - done;
         if (activities.length >= 6 && done < activities.length / 2) {
             generated.push({ type: "danger", icon: "😓", message: "You have a lot of activities and haven't completed most of them. You might be overloading yourself — remember to rest!", timestamp: new Date().toLocaleString(), read: false });
         } else if (activities.length >= 4) {
@@ -108,11 +99,16 @@ function Home() {
             generated.push({ type: "info", icon: "🏃", message: "No activities scheduled yet. Add some to stay on track!", timestamp: new Date().toLocaleString(), read: false });
         }
 
-        setWarnings(generated);
-        localStorage.setItem("notifications", JSON.stringify(generated));
-
         const urgent = generated.find(w => w.type === "danger");
+
+        setTotalBalance(balance);
+        setTotalCalories(calories);
+        setTotalActivities(activities.length);
+        setDoneActivities(done);
+        setWarnings(generated);
         if (urgent) setPopup(urgent);
+
+        localStorage.setItem("notifications", JSON.stringify(generated));
 
     }, []);
 
