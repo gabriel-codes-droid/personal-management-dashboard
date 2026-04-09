@@ -21,7 +21,7 @@ function Activity() {
     const intervalRef = useRef(null);
     const [now, setNow] = useState(new Date());
 
-    const { deletedItem, showToast, triggerDelete, confirmDelete, undoDelete, setDeletedItem } = useDeleteWithUndo();
+    const { deletedItem, showToast, triggerDelete, confirmDelete, undoDelete, setDeletedItem } = useDeleteWithUndo("activity");
 
     useEffect(() => {
         localStorage.setItem("activities", JSON.stringify(activities));
