@@ -55,20 +55,50 @@ nav a.active, nav button.active {
 }
 
 /* Dashboard Boxes */
-.finance, .activity, .meal {
-  width: 31%;
+.finance, .activity, .meal{
+  width: 20%;
   height: 450px;
   padding: 25px;
-  border-radius: 12px;
+  border-radius: 15px;
   margin: 1%;
   display: inline-block;
   vertical-align: top;
   box-sizing: border-box;
   background-color: #1a1a1a;
-  color: #ffffff;
-  overflow-y: auto;
+  color: white;
+  overflow: hidden;
   text-align: left;
   border: 1px solid #333;
+
+  transition: all 0.5s ease;
+  cursor: pointer;
+}
+
+/* Shared hover effect */
+.finance:hover,
+.activity:hover,
+.meal:hover{
+  width: 45%;
+  transform: translateY(-10px);
+  z-index: 10;
+}
+
+/* Finance */
+.finance:hover{
+  border-color: #3b82f6;
+  box-shadow: 0 0 30px rgba(59,130,246,0.7);
+}
+
+/* Activity */
+.activity:hover{
+  border-color: #22c55e;
+  box-shadow: 0 0 30px rgba(34,197,94,0.7);
+}
+
+/* Meals */
+.meal:hover{
+  border-color: #f97316;
+  box-shadow: 0 0 30px rgba(249,115,22,0.7);
 }
 
 /* Headlines */
