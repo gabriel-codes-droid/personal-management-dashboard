@@ -3,37 +3,25 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from './auth';
 import { useTheme } from './theme';
 
-function Signup() {
+function Login() {
     const navigate = useNavigate();
-    const { signup } = useAuth();
+    const { login } = useAuth();
     const { theme, toggle } = useTheme();
 
-    const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [confirm, setConfirm] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
     const onSubmit = async (e) => {
         e.preventDefault();
         setError('');
-
-        if (password !== confirm) {
-            setError('Passwords do not match.');
-            return;
-        }
-        if (password.length < 6) {
-            setError('Password must be at least 6 characters.');
-            return;
-        }
-
         setLoading(true);
         try {
-            await signup(username.trim(), email.trim(), password);
+            await login(email.trim(), password);
             navigate('/', { replace: true });
         } catch (err) {
-            setError(err.response?.data?.message || 'Signup failed. Please try again.');
+            setError(err.response?.data?.message || 'Login failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -53,24 +41,12 @@ function Signup() {
                     </div>
                 </div>
 
-                <div className="auth-title">Create your account</div>
-                <div className="auth-sub">Sign up to start tracking your life.</div>
+                <div className="auth-title">Welcome back</div>
+                <div className="auth-sub">Sign in to access your dashboard.</div>
 
                 {error && <div className="auth-error">{error}</div>}
 
                 <form onSubmit={onSubmit}>
-                    <div className="field mb-md">
-                        <label>Username</label>
-                        <input
-                            className="input"
-                            type="text"
-                            placeholder="Your name"
-                            value={username}
-                            onChange={e => setUsername(e.target.value)}
-                            required
-                            autoComplete="username"
-                        />
-                    </div>
                     <div className="field mb-md">
                         <label>Email</label>
                         <input
@@ -88,37 +64,25 @@ function Signup() {
                         <input
                             className="input"
                             type="password"
-                            placeholder="At least 6 characters"
+                            placeholder="••••••••"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
                             required
-                            autoComplete="new-password"
-                        />
-                    </div>
-                    <div className="field mb-md">
-                        <label>Confirm password</label>
-                        <input
-                            className="input"
-                            type="password"
-                            placeholder="Repeat your password"
-                            value={confirm}
-                            onChange={e => setConfirm(e.target.value)}
-                            required
-                            autoComplete="new-password"
+                            autoComplete="current-password"
                         />
                     </div>
                     <button type="submit" className="btn primary auth-submit" disabled={loading}>
-                        {loading ? <><span className="spinner" /> Creating account...</> : 'Create account'}
+                        {loading ? <><span className="spinner" /> Signing in...</> : 'Sign in'}
                     </button>
                 </form>
 
                 <div className="auth-switch">
-                    Already have an account?
-                    <Link to="/login">Sign in</Link>
+                    No account?
+                    <Link to="/signup">Create one</Link>
                 </div>
             </div>
         </div>
     );
 }
 
-export default Signup;
+export default Login;

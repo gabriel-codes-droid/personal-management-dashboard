@@ -1,142 +1,75 @@
 import { useState } from 'react';
-import './App.css';
 
+// Trash kept as client-side for now — deleted items are removed from backend.
+// Keeping the page so the UI doesn't break; restore from backend via re-create if needed.
 function Trash() {
-    const [trash, setTrash] = useState(() => {
-        return JSON.parse(localStorage.getItem("trash") || "[]");
-    });
-
-    const typeColors = {
-        transaction: "#00cc66",
-        meal: "#646cff",
-        activity: "#ffaa00",
-        notification: "#ff4444"
-    };
-
-    const typeIcons = {
-        transaction: "💰",
-        meal: "🍽️",
-        activity: "🏃",
-        notification: "🔔"
-    };
-
-    const restoreItem = (item) => {
-        // Add back to original list
-        const key = item.itemType === "transaction" ? "transactions"
-            : item.itemType === "meal" ? "meals"
-            : item.itemType === "activity" ? "activities"
-            : "notifications";
-
-        const original = JSON.parse(localStorage.getItem(key) || "[]");
-        // Remove trash-specific fields
-        const { itemType, deletedAt, ...cleanItem } = item;
-        original.push(cleanItem);
-        localStorage.setItem(key, JSON.stringify(original));
-
-        // Remove from trash
-        const updated = trash.filter(i => i.id !== item.id);
-        localStorage.setItem("trash", JSON.stringify(updated));
-        setTrash(updated);
-    };
-
-    const permanentDelete = (item) => {
-        const updated = trash.filter(i => i.id !== item.id);
-        localStorage.setItem("trash", JSON.stringify(updated));
-        setTrash(updated);
-    };
-
-    const emptyTrash = () => {
-        localStorage.setItem("trash", "[]");
-        setTrash([]);
-    };
-
-    const getItemName = (item) => {
-        return item.title || item.description || item.message || "Unknown item";
-    };
+    const [trash] = useState(() => JSON.parse(localStorage.getItem('trash') || '[]'));
 
     return (
-        <div className="page-container">
-            <h2>🗑️ Trash</h2>
-            <p style={{ color: "#aaa", marginBottom: "20px" }}>
-                Items deleted from PMD. Restore or permanently delete them.
-            </p>
+        <div>
+            <div className="section-title">Trash</div>
+            <div className="section-sub">Deleted items are removed from the server. Use the API to restore if needed.</div>
 
-            {trash.length === 0 ? (
-                <p style={{ color: "#aaa" }}>Trash is empty.</p>
-            ) : (
-                <>
-                    <button onClick={emptyTrash} style={{
-                        marginBottom: "20px",
-                        padding: "8px 18px",
-                        borderRadius: "10px",
-                        border: "2px solid #ff4444",
-                        background: "transparent",
-                        color: "#ff4444",
-                        fontWeight: "bold",
-                        cursor: "pointer",
-                        boxShadow: "0 0 10px rgba(255,68,68,0.4)"
-                    }}>🗑️ Empty Trash</button>
+            <div className="grid grid-4 mb-md">
+                <div className="kpi finance">
+                    <div className="kpi-icon">◆</div>
+                    <div className="kpi-label">Transactions</div>
+                    <div className="kpi-value">{trash.filter(i => i.itemType === 'transaction').length}</div>
+                </div>
+                <div className="kpi meals">
+                    <div className="kpi-icon">◉</div>
+                    <div className="kpi-label">Meals</div>
+                    <div className="kpi-value">{trash.filter(i => i.itemType === 'meal').length}</div>
+                </div>
+                <div className="kpi activity">
+                    <div className="kpi-icon">▣</div>
+                    <div className="kpi-label">Activities</div>
+                    <div className="kpi-value">{trash.filter(i => i.itemType === 'activity').length}</div>
+                </div>
+                <div className="kpi accent">
+                    <div className="kpi-icon">◔</div>
+                    <div className="kpi-label">Notifications</div>
+                    <div className="kpi-value">{trash.filter(i => i.itemType === 'notification').length}</div>
+                </div>
+            </div>
 
-                    <div style={{ width: "80%" }}>
-                        {trash.map((item, index) => (
-                            <div key={index} style={{
-                                background: "#1a1a1a",
-                                border: `2px solid ${typeColors[item.itemType]}`,
-                                borderRadius: "10px",
-                                padding: "14px 18px",
-                                marginBottom: "10px",
-                                color: "white",
-                                boxShadow: `0 0 10px ${typeColors[item.itemType]}33`,
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                gap: "10px"
-                            }}>
-                                <div>
-                                    <p>
-                                        {typeIcons[item.itemType]}
-                                        <span style={{
-                                            color: typeColors[item.itemType],
-                                            fontWeight: "bold",
-                                            marginLeft: "6px",
-                                            textTransform: "capitalize"
-                                        }}>
-                                            {item.itemType}
-                                        </span>
-                                        {" — "}
-                                        {getItemName(item)}
-                                    </p>
-                                    <p style={{ color: "#aaa", fontSize: "0.75rem", marginTop: "4px" }}>
-                                        🕐 Deleted at: {item.deletedAt}
-                                    </p>
-                                </div>
-                                <div style={{ display: "flex", gap: "8px" }}>
-                                    <button onClick={() => restoreItem(item)} style={{
-                                        padding: "6px 14px",
-                                        borderRadius: "8px",
-                                        border: "2px solid #00cc66",
-                                        background: "transparent",
-                                        color: "#00cc66",
-                                        fontWeight: "bold",
-                                        cursor: "pointer",
-                                        boxShadow: "0 0 8px rgba(0,204,102,0.4)"
-                                    }}>Restore</button>
-                                    <button onClick={() => permanentDelete(item)} style={{
-                                        padding: "6px 14px",
-                                        borderRadius: "8px",
-                                        border: "2px solid #ff4444",
-                                        background: "transparent",
-                                        color: "#ff4444",
-                                        fontWeight: "bold",
-                                        cursor: "pointer",
-                                        boxShadow: "0 0 8px rgba(255,68,68,0.4)"
-                                    }}>Delete Forever</button>
-                                </div>
-                            </div>
-                        ))}
+            <div className="card">
+                <div className="card-header">
+                    <div>
+                        <div className="card-title">Deleted Items</div>
+                        <div className="card-sub">{trash.length} items in trash</div>
                     </div>
-                </>
-            )}
+                </div>
+                {trash.length === 0 ? (
+                    <div className="empty">
+                        <div className="empty-icon">○</div>
+                        Trash is empty. With backend sync, deletes are permanent — use the dashboard's edit features to manage your data.
+                    </div>
+                ) : (
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Item</th>
+                                <th>Deleted</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {trash.map(item => (
+                                <tr key={item.id}>
+                                    <td>
+                                        <span className="badge">{item.itemType}</span>
+                                    </td>
+                                    <td style={{ color: 'var(--text-0)', fontWeight: 500 }}>
+                                        {item.title || item.description || item.message || 'Unknown'}
+                                    </td>
+                                    <td className="muted">{item.deletedAt}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
         </div>
     );
 }

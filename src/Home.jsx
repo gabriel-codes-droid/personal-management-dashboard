@@ -1,217 +1,354 @@
-import './App.css';
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { transactions as txApi, meals as mealApi, activities as actApi } from './api';
+import {
+    AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+    PieChart, Pie, Cell, BarChart, Bar, CartesianGrid
+} from 'recharts';
 
-const ProgressBar = ({ value, max, color }) => {
-    const percent = max === 0 ? 0 : Math.min((value / max) * 100, 100);
-    return (
-        <div style={{ background: "#333", borderRadius: "10px", height: "10px", width: "100%", margin: "8px 0" }}>
-            <div style={{
-                width: `${percent}%`,
-                height: "100%",
-                borderRadius: "10px",
-                background: color,
-                transition: "width 0.5s ease"
-            }} />
-        </div>
-    );
+const last7Days = () => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        days.push(d.toISOString().slice(0, 10));
+    }
+    return days;
 };
 
+const fmtShortDay = (iso) => new Date(iso).toLocaleDateString(undefined, { weekday: 'short' });
+
+const dayBucket = (date) => {
+    const d = new Date(date);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+};
+
+const DAY_MS = 86400000;
+
 function Home() {
-    const [totalBalance, setTotalBalance] = useState(0);
-    const [totalCalories, setTotalCalories] = useState(0);
-    const [totalActivities, setTotalActivities] = useState(0);
-    const [doneActivities, setDoneActivities] = useState(0);
-    const [warnings, setWarnings] = useState([]);
-    const [popup, setPopup] = useState(null);
-
-    const warningColors = {
-        danger: "#ff4444",
-        warning: "#ffaa00",
-        success: "#00cc66",
-        info: "#646cff"
-    };
-
-    const getCalorieLevel = (calories) => {
-        if (calories <= 2000) return { label: "🟢 Healthy", color: "#00cc66" };
-        if (calories <= 2500) return { label: "🟡 Moderate", color: "#ffdd00" };
-        if (calories <= 3000) return { label: "🟠 High", color: "#ffaa00" };
-        return { label: "🔴 Danger", color: "#ff4444" };
-    };
-
-    const getFinanceLevel = (balance) => {
-        if (balance > 500) return { label: "🟢 Healthy", color: "#00cc66" };
-        if (balance > 100) return { label: "🟡 Low", color: "#ffdd00" };
-        if (balance > 0) return { label: "🟠 Critical", color: "#ffaa00" };
-        return { label: "🔴 Danger", color: "#ff4444" };
-    };
-
-    const getStressLevel = (total, done) => {
-        const pending = total - done;
-        if (pending === 0 && total > 0) return { label: "🟢 All Done!", color: "#00cc66" };
-        if (pending <= 2) return { label: "🟢 Low Stress", color: "#00cc66" };
-        if (pending <= 4) return { label: "🟡 Moderate", color: "#ffdd00" };
-        if (pending <= 6) return { label: "🟠 High Stress", color: "#ffaa00" };
-        return { label: "🔴 Overloaded!", color: "#ff4444" };
-    };
+    const [transactions, setTransactions] = useState([]);
+    const [meals, setMeals] = useState([]);
+    const [activities, setActivities] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [notifications, setNotifications] = useState([]);
 
     useEffect(() => {
-        const transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
-        const balance = transactions.reduce((total, t) => total + t.amount, 0);
+        (async () => {
+            try {
+                const [txs, ms, acs] = await Promise.all([
+                    txApi.list(), mealApi.list(), actApi.list()
+                ]);
+                setTransactions(txs);
+                setMeals(ms);
+                setActivities(acs);
 
-        const meals = JSON.parse(localStorage.getItem("meals") || "[]");
-        const calories = meals.reduce((total, m) => total + Number(m.calories), 0);
+                // generate fresh insights based on current data
+                const balance = txs.reduce((s, t) => s + t.amount, 0);
+                const cals = ms.reduce((s, m) => s + Number(m.calories), 0);
+                const done = acs.filter(a => a.done).length;
+                const generated = [];
 
-        const activities = JSON.parse(localStorage.getItem("activities") || "[]");
-        const done = activities.filter(a => a.done).length;
+                if (balance < 0)
+                    generated.push({ type: 'danger', icon: '💸', message: 'Your balance is negative. Review your expenses.', timestamp: new Date().toLocaleString(), read: false });
+                else if (balance < 100)
+                    generated.push({ type: 'warning', icon: '⚠️', message: 'Balance is getting low. Be mindful of spending.', timestamp: new Date().toLocaleString(), read: false });
+                else
+                    generated.push({ type: 'success', icon: '💰', message: 'Finances are healthy. Keep it up.', timestamp: new Date().toLocaleString(), read: false });
 
-        const generated = [];
+                if (cals > 3000)
+                    generated.push({ type: 'danger', icon: '🚨', message: 'Over 3000 kcal logged today. Consider lighter meals.', timestamp: new Date().toLocaleString(), read: false });
+                else if (cals > 2000)
+                    generated.push({ type: 'warning', icon: '🍔', message: 'Above 2000 kcal daily intake.', timestamp: new Date().toLocaleString(), read: false });
+                else if (ms.length > 0)
+                    generated.push({ type: 'success', icon: '✅', message: 'Calorie intake within healthy range.', timestamp: new Date().toLocaleString(), read: false });
+                else
+                    generated.push({ type: 'info', icon: '🍽️', message: 'No meals logged yet today.', timestamp: new Date().toLocaleString(), read: false });
 
-        // Calorie warnings
-        if (calories > 3000) {
-            generated.push({ type: "danger", icon: "🚨", message: "You've logged over 3000 kcal! That's significantly above the daily recommended intake. Consider lighter meals.", timestamp: new Date().toLocaleString(), read: false });
-        } else if (calories > 2000) {
-            generated.push({ type: "warning", icon: "🍔", message: "You're above the recommended 2000 kcal daily intake. Watch what you eat for the rest of the day.", timestamp: new Date().toLocaleString(), read: false });
-        } else if (calories < 500 && meals.length > 0) {
-            generated.push({ type: "info", icon: "🥗", message: "Your calorie intake seems very low. Make sure you're eating enough to stay energized!", timestamp: new Date().toLocaleString(), read: false });
-        } else if (meals.length === 0) {
-            generated.push({ type: "info", icon: "🍽️", message: "No meals logged yet today. Don't forget to track your food intake!", timestamp: new Date().toLocaleString(), read: false });
-        } else {
-            generated.push({ type: "success", icon: "✅", message: "Great job! Your calorie intake is within the healthy range today.", timestamp: new Date().toLocaleString(), read: false });
-        }
+                if (acs.length === 0)
+                    generated.push({ type: 'info', icon: '🏃', message: 'No activities scheduled. Add some to stay on track.', timestamp: new Date().toLocaleString(), read: false });
+                else if (acs.length >= 6 && done < acs.length / 2)
+                    generated.push({ type: 'danger', icon: '😓', message: 'Many pending activities. You may be overloading yourself.', timestamp: new Date().toLocaleString(), read: false });
+                else if (done === acs.length)
+                    generated.push({ type: 'success', icon: '🏆', message: 'All activities completed for today!', timestamp: new Date().toLocaleString(), read: false });
+                else
+                    generated.push({ type: 'info', icon: '📋', message: `${acs.length - done} activities still pending.`, timestamp: new Date().toLocaleString(), read: false });
 
-        // Finance warnings
-        if (balance < 0) {
-            generated.push({ type: "danger", icon: "💸", message: "Your balance is negative! You're spending more than you earn. Time to review your expenses.", timestamp: new Date().toLocaleString(), read: false });
-        } else if (balance < 100) {
-            generated.push({ type: "warning", icon: "⚠️", message: "Your balance is getting low. Be mindful of your spending.", timestamp: new Date().toLocaleString(), read: false });
-        } else {
-            generated.push({ type: "success", icon: "💰", message: "Your finances are looking healthy. Keep it up!", timestamp: new Date().toLocaleString(), read: false });
-        }
-
-        // Activity warnings
-        if (activities.length >= 6 && done < activities.length / 2) {
-            generated.push({ type: "danger", icon: "😓", message: "You have a lot of activities and haven't completed most of them. You might be overloading yourself — remember to rest!", timestamp: new Date().toLocaleString(), read: false });
-        } else if (activities.length >= 4) {
-            generated.push({ type: "warning", icon: "😅", message: "You have quite a packed schedule today. Make sure to take breaks and not stress yourself out.", timestamp: new Date().toLocaleString(), read: false });
-        } else if (done === activities.length && activities.length > 0) {
-            generated.push({ type: "success", icon: "🏆", message: "Amazing! You've completed all your activities today. Well done!", timestamp: new Date().toLocaleString(), read: false });
-        } else if (activities.length === 0) {
-            generated.push({ type: "info", icon: "🏃", message: "No activities scheduled yet. Add some to stay on track!", timestamp: new Date().toLocaleString(), read: false });
-        }
-
-        const urgent = generated.find(w => w.type === "danger");
-
-        setTotalBalance(balance);
-        setTotalCalories(calories);
-        setTotalActivities(activities.length);
-        setDoneActivities(done);
-        setWarnings(generated);
-        if (urgent) setPopup(urgent);
-
-        localStorage.setItem("notifications", JSON.stringify(generated));
-
+                localStorage.setItem('notifications', JSON.stringify(generated));
+                setNotifications(generated);
+            } catch (e) {
+                console.error('Dashboard load failed', e);
+            } finally {
+                setLoading(false);
+            }
+        })();
     }, []);
 
-    const calorieLevel = getCalorieLevel(totalCalories);
-    const financeLevel = getFinanceLevel(totalBalance);
-    const stressLevel = getStressLevel(totalActivities, doneActivities);
+    const totalBalance = transactions.reduce((s, t) => s + t.amount, 0);
+    const totalIncome = transactions.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+    const totalExpense = transactions.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+    const totalCals = meals.reduce((s, m) => s + Number(m.calories), 0);
+    const doneActivities = activities.filter(a => a.done).length;
+
+    const success = '#10b981';
+    const warning = '#f59e0b';
+    const danger = '#ef4444';
+    const finance = '#3b82f6';
+    const mealsColor = '#f97316';
+
+    const calLevel = totalCals <= 2000 ? { label: 'Healthy', color: success }
+        : totalCals <= 2500 ? { label: 'Moderate', color: warning }
+        : { label: 'High', color: danger };
+    const finLevel = totalBalance > 500 ? { label: 'Healthy', color: success }
+        : totalBalance > 100 ? { label: 'Low', color: warning }
+        : totalBalance > 0 ? { label: 'Critical', color: warning }
+        : { label: 'Danger', color: danger };
+    const actLevel = activities.length === 0 ? { label: 'No activities', color: '#5b6377' }
+        : doneActivities === activities.length ? { label: 'All done', color: success }
+        : (activities.length - doneActivities) <= 2 ? { label: 'Low load', color: success }
+        : (activities.length - doneActivities) <= 4 ? { label: 'Moderate', color: warning }
+        : { label: 'Heavy', color: danger };
+
+    const days = last7Days();
+    const balanceSeries = days.map(iso => {
+        const cutoff = new Date(iso).setHours(23, 59, 59, 999);
+        const sum = transactions
+            .filter(t => new Date(t.createdAt).getTime() <= cutoff)
+            .reduce((s, t) => s + t.amount, 0);
+        return { day: fmtShortDay(iso), balance: sum };
+    });
+    const expenseSeries = days.map(iso => {
+        const start = new Date(iso).setHours(0, 0, 0, 0);
+        const sum = transactions
+            .filter(t => t.amount < 0 && dayBucket(t.createdAt) === start)
+            .reduce((s, t) => s + Math.abs(t.amount), 0);
+        return { day: fmtShortDay(iso), expense: sum };
+    });
+
+    const categoryData = [
+        { name: 'Income', value: totalIncome, color: success },
+        { name: 'Expense', value: totalExpense, color: danger },
+    ].filter(x => x.value > 0);
+
+    const feed = [
+        ...transactions.slice(0, 5).map(t => ({
+            type: 'finance', icon: t.amount >= 0 ? '↗' : '↘',
+            text: t.description || (t.amount >= 0 ? 'Income' : 'Expense'),
+            meta: (t.amount >= 0 ? '+' : '') + '$' + t.amount,
+            color: t.amount >= 0 ? success : danger,
+            ts: new Date(t.createdAt).getTime()
+        })),
+        ...meals.slice(0, 5).map(m => ({
+            type: 'meals', icon: '◉', text: m.title, meta: m.calories + ' kcal', color: mealsColor, ts: new Date(m.createdAt).getTime()
+        })),
+        ...activities.slice(0, 5).map(a => ({
+            type: 'activity', icon: a.done ? '✓' : '◷',
+            text: a.title, meta: a.done ? 'Done' : 'Pending', color: a.done ? success : warning, ts: new Date(a.createdAt).getTime()
+        })),
+    ].sort((a, b) => b.ts - a.ts).slice(0, 8);
+
+    if (loading) {
+        return (
+            <div className="loading-screen" style={{ minHeight: 'auto', padding: 80 }}>
+                <div className="spinner" />
+                <div>Loading your dashboard...</div>
+            </div>
+        );
+    }
 
     return (
-        <div className="dashboard-container">
+        <div>
+            <div className="section-title">Dashboard Overview</div>
+            <div className="section-sub">
+                Welcome back. Here's a snapshot of your finance, nutrition, and activity today.
+            </div>
 
-            {/* Popup */}
-            {popup && (
-                <div style={{
-                    position: "fixed",
-                    top: "20px",
-                    right: "20px",
-                    background: "#1a1a1a",
-                    border: `2px solid ${warningColors.danger}`,
-                    borderRadius: "12px",
-                    padding: "16px 20px",
-                    maxWidth: "320px",
-                    boxShadow: `0 0 20px rgba(255, 68, 68, 0.5)`,
-                    zIndex: 1000,
-                    color: "white"
-                }}>
-                    <p style={{ fontSize: "1.2rem" }}>{popup.icon} <strong>Urgent Alert</strong></p>
-                    <p style={{ color: "#ccc", marginTop: "8px", fontSize: "0.9rem" }}>{popup.message}</p>
-                    <button onClick={() => setPopup(null)} style={{
-                        marginTop: "12px",
-                        padding: "6px 14px",
-                        borderRadius: "8px",
-                        border: "2px solid #ff4444",
-                        background: "transparent",
-                        color: "#ff4444",
-                        cursor: "pointer",
-                        fontWeight: "bold"
-                    }}>Dismiss</button>
-                </div>
-            )}
-
-            <h2>Welcome to your Personal Management Dashboard</h2>
-            <h3>What PMD (Personal Management Dashboard) does:</h3>
-
-            {/* 3 Boxes */}
-            <div>
-                <div className="finance">
-                    <h3>💰 Finance Tracker</h3>
-                    <p>Track your income and expenses in one place.</p>
-                    <br />
-                    <p>Total Balance:
-                        <strong style={{ color: totalBalance >= 0 ? "#00cc66" : "#ff4444" }}>
-                            {" "}${totalBalance}
-                        </strong>
-                    </p>
-                    <br />
-                    <p>Health Level: <strong style={{ color: financeLevel.color }}>{financeLevel.label}</strong></p>
-                    <ProgressBar value={totalBalance} max={1000} color={financeLevel.color} />
+            <div className="grid grid-4 mb-md">
+                <div className="kpi finance">
+                    <div className="kpi-icon">◆</div>
+                    <div className="kpi-label">Total Balance</div>
+                    <div className="kpi-value" style={{ color: totalBalance >= 0 ? success : danger }}>
+                        ${Math.abs(totalBalance).toFixed(2)}
+                    </div>
+                    <div className="kpi-sub">
+                        <span className={'badge ' + (finLevel.color === success ? 'success' : finLevel.color === warning ? 'warning' : 'danger')}>
+                            {finLevel.label}
+                        </span>
+                    </div>
                 </div>
 
-                <div className="activity">
-                    <h3>🏃 Activity Tracker</h3>
-                    <p>Track your daily activities and schedule.</p>
-                    <br />
-                    <p>Total: <strong style={{ color: "#646cff" }}>{totalActivities}</strong></p>
-                    <p>Completed: <strong style={{ color: "#00cc66" }}>{doneActivities}</strong></p>
-                    <p>Pending: <strong style={{ color: "#ff4444" }}>{totalActivities - doneActivities}</strong></p>
-                    <br />
-                    <p>Stress Level: <strong style={{ color: stressLevel.color }}>{stressLevel.label}</strong></p>
-                    <ProgressBar value={doneActivities} max={totalActivities} color={stressLevel.color} />
+                <div className="kpi meals">
+                    <div className="kpi-icon">◉</div>
+                    <div className="kpi-label">Calories Today</div>
+                    <div className="kpi-value">{totalCals}</div>
+                    <div className="kpi-sub">
+                        <span className={'badge ' + (calLevel.color === success ? 'success' : calLevel.color === warning ? 'warning' : 'danger')}>
+                            {calLevel.label}
+                        </span>
+                        <span className="muted"> · {meals.length} meals</span>
+                    </div>
                 </div>
 
-                <div className="meal">
-                    <h3>🍽️ Meal & Calorie Tracker</h3>
-                    <p>Track your meals and monitor your calorie intake.</p>
-                    <br />
-                    <p>Total Meals: <strong style={{ color: "#646cff" }}>{JSON.parse(localStorage.getItem("meals") || "[]").length}</strong></p>
-                    <p>Total Calories:
-                        <strong style={{ color: calorieLevel.color }}>
-                            {" "}{totalCalories} kcal
-                        </strong>
-                    </p>
-                    <br />
-                    <p>Health Level: <strong style={{ color: calorieLevel.color }}>{calorieLevel.label}</strong></p>
-                    <ProgressBar value={totalCalories} max={3000} color={calorieLevel.color} />
+                <div className="kpi activity">
+                    <div className="kpi-icon">▣</div>
+                    <div className="kpi-label">Activities</div>
+                    <div className="kpi-value">{doneActivities}<span className="muted" style={{ fontSize: 16, fontWeight: 500 }}> / {activities.length}</span></div>
+                    <div className="kpi-sub">
+                        <span className={'badge ' + (actLevel.color === success ? 'success' : actLevel.color === warning ? 'warning' : actLevel.color === danger ? 'danger' : 'info')}>
+                            {actLevel.label}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="kpi accent">
+                    <div className="kpi-icon">◐</div>
+                    <div className="kpi-label">Income · Expense</div>
+                    <div className="kpi-value" style={{ fontSize: 18, display: 'flex', gap: 12, alignItems: 'baseline' }}>
+                        <span style={{ color: success }}>+${totalIncome.toFixed(0)}</span>
+                        <span style={{ color: danger }}>−${totalExpense.toFixed(0)}</span>
+                    </div>
+                    <div className="kpi-sub muted">Lifetime totals</div>
                 </div>
             </div>
 
-            {/* Warnings Section */}
-            <div style={{ width: "80%", margin: "30px auto" }}>
-                <h3 style={{ color: "white", marginBottom: "15px" }}>⚡ Health & Finance Insights</h3>
-                {warnings.map((warning, index) => (
-                    <div key={index} style={{
-                        background: "#1a1a1a",
-                        border: `2px solid ${warningColors[warning.type]}`,
-                        borderRadius: "10px",
-                        padding: "12px 18px",
-                        marginBottom: "10px",
-                        color: "white",
-                        boxShadow: `0 0 10px ${warningColors[warning.type]}33`
-                    }}>
-                        {warning.icon} {warning.message}
+            <div className="grid grid-2-1 mb-md">
+                <div className="card">
+                    <div className="card-header">
+                        <div>
+                            <div className="card-title">Balance Trend</div>
+                            <div className="card-sub">Cumulative balance over the last 7 days</div>
+                        </div>
+                        <span className="badge info"><span className="dot"></span> 7d</span>
                     </div>
-                ))}
+                    <div style={{ width: '100%', height: 240 }}>
+                        <ResponsiveContainer>
+                            <AreaChart data={balanceSeries}>
+                                <defs>
+                                    <linearGradient id="balGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor={finance} stopOpacity={0.45} />
+                                        <stop offset="95%" stopColor={finance} stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#232938" />
+                                <XAxis dataKey="day" stroke="#5b6377" tick={{ fontSize: 11 }} />
+                                <YAxis stroke="#5b6377" tick={{ fontSize: 11 }} />
+                                <Tooltip />
+                                <Area type="monotone" dataKey="balance" stroke={finance} strokeWidth={2} fill="url(#balGrad)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                <div className="card">
+                    <div className="card-header">
+                        <div>
+                            <div className="card-title">Income vs Expense</div>
+                            <div className="card-sub">Lifetime distribution</div>
+                        </div>
+                    </div>
+                    <div style={{ width: '100%', height: 240 }}>
+                        {categoryData.length === 0 ? (
+                            <div className="empty"><div className="empty-icon">○</div>No transactions yet.</div>
+                        ) : (
+                            <ResponsiveContainer>
+                                <PieChart>
+                                    <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={90} paddingAngle={3}>
+                                        {categoryData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                                    </Pie>
+                                    <Tooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        )}
+                    </div>
+                    <div className="row" style={{ justifyContent: 'center', gap: 14, marginTop: 4 }}>
+                        {categoryData.map(d => (
+                            <div key={d.name} className="row" style={{ gap: 6, fontSize: 12 }}>
+                                <span style={{ width: 8, height: 8, borderRadius: 2, background: d.color }} />
+                                <span className="muted">{d.name}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-2-1 mb-md">
+                <div className="card">
+                    <div className="card-header">
+                        <div>
+                            <div className="card-title">Daily Expenses</div>
+                            <div className="card-sub">Spending per day (last 7 days)</div>
+                        </div>
+                    </div>
+                    <div style={{ width: '100%', height: 220 }}>
+                        <ResponsiveContainer>
+                            <BarChart data={expenseSeries}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#232938" />
+                                <XAxis dataKey="day" stroke="#5b6377" tick={{ fontSize: 11 }} />
+                                <YAxis stroke="#5b6377" tick={{ fontSize: 11 }} />
+                                <Tooltip />
+                                <Bar dataKey="expense" fill="#f97316" radius={[6, 6, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                <div className="card">
+                    <div className="card-header">
+                        <div>
+                            <div className="card-title">Health Insights</div>
+                            <div className="card-sub">Auto-generated alerts</div>
+                        </div>
+                        <Link to="/notifications" className="btn ghost sm">View all</Link>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {notifications.slice(0, 4).map((n, i) => (
+                            <div key={i} className={'notif ' + n.type}>
+                                <div className="notif-icon">{n.icon}</div>
+                                <div>
+                                    <div className="notif-msg">{n.message}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <div className="card">
+                <div className="card-header">
+                    <div>
+                        <div className="card-title">Recent Activity</div>
+                        <div className="card-sub">Latest items across all modules</div>
+                    </div>
+                </div>
+                {feed.length === 0 ? (
+                    <div className="empty"><div className="empty-icon">○</div>Nothing yet. Add a transaction, meal, or activity to get started.</div>
+                ) : (
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th style={{ width: 40 }}></th>
+                                <th>Item</th>
+                                <th>Module</th>
+                                <th>Detail</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {feed.map((f, i) => (
+                                <tr key={i}>
+                                    <td style={{ color: f.color, fontWeight: 700, fontSize: 16 }}>{f.icon}</td>
+                                    <td style={{ color: 'var(--text-0)', fontWeight: 500 }}>{f.text || '—'}</td>
+                                    <td>
+                                        <span className={'badge ' + f.type}>{f.type}</span>
+                                    </td>
+                                    <td className="muted">{f.meta}</td>
+                                    <td>
+                                        <span className="badge info"><span className="dot"></span>{new Date(f.ts).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
             </div>
         </div>
     );
