@@ -1,15 +1,3 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  background-color: #242424;
-  color: white;
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-}
+/* PMD uses styles.css for all styling. This file is intentionally empty
+   to override the default Vite scaffold body { display: flex; align-items: center }
+   which was constraining the dashboard to its intrinsic content width. */
