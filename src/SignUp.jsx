@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from './auth';
 import { useTheme } from './theme';
+import { auth as authApi } from './api';
 import { validateUsername, validateEmail, validatePassword, passwordStrength } from './validation';
 
 function Signup() {
@@ -17,8 +18,51 @@ function Signup() {
     const [fieldErrors, setFieldErrors] = useState({});
     const [loading, setLoading] = useState(false);
 
+    // availability: 'unknown' | 'checking' | 'available' | 'taken'
+    const [emailStatus, setEmailStatus] = useState('unknown');
+    const [usernameStatus, setUsernameStatus] = useState('unknown');
+
     const pwStrength = passwordStrength(password);
     const confirmMismatch = confirm.length > 0 && password !== confirm;
+
+    // Debounced live check for email availability
+    useEffect(() => {
+        const trimmed = email.trim();
+        // reset if the field is empty or has a syntax problem
+        if (!trimmed || validateEmail(trimmed)) {
+            setEmailStatus('unknown');
+            return;
+        }
+        setEmailStatus('checking');
+        const t = setTimeout(async () => {
+            try {
+                const { exists } = await authApi.checkEmail(trimmed);
+                setEmailStatus(exists ? 'taken' : 'available');
+            } catch {
+                setEmailStatus('unknown');
+            }
+        }, 500);
+        return () => clearTimeout(t);
+    }, [email]);
+
+    // Debounced live check for username availability
+    useEffect(() => {
+        const trimmed = username.trim();
+        if (!trimmed || validateUsername(trimmed)) {
+            setUsernameStatus('unknown');
+            return;
+        }
+        setUsernameStatus('checking');
+        const t = setTimeout(async () => {
+            try {
+                const { exists } = await authApi.checkUsername(trimmed);
+                setUsernameStatus(exists ? 'taken' : 'available');
+            } catch {
+                setUsernameStatus('unknown');
+            }
+        }, 500);
+        return () => clearTimeout(t);
+    }, [username]);
 
     const onSubmit = async (e) => {
         e.preventDefault();
@@ -28,8 +72,10 @@ function Signup() {
         const errs = {};
         const uErr = validateUsername(username);
         if (uErr) errs.username = uErr;
+        else if (usernameStatus === 'taken') errs.username = 'That username is already taken.';
         const eErr = validateEmail(email);
         if (eErr) errs.email = eErr;
+        else if (emailStatus === 'taken') errs.email = 'This email is already registered. Try signing in instead.';
         const pErr = validatePassword(password);
         if (pErr) errs.password = pErr;
         if (!confirm) errs.confirm = 'Please confirm your password.';
@@ -42,7 +88,18 @@ function Signup() {
             await signup(username.trim(), email.trim(), password);
             navigate('/', { replace: true });
         } catch (err) {
-            setError(err.response?.data?.message || 'Signup failed. Please try again.');
+            // Surface the backend's reason. axios error shape: err.response.data.message
+            const status = err.response?.status;
+            const serverMsg = err.response?.data?.message;
+            const reason = serverMsg || err.message || 'Signup failed. Please try again.';
+            setError(reason);
+            // If the server pinpoints a field, mark it inline too
+            const field = err.response?.data?.field;
+            if (field === 'email' || field === 'username') {
+                setFieldErrors(f => ({ ...f, [field]: reason }));
+                if (field === 'email') setEmailStatus('taken');
+                if (field === 'username') setUsernameStatus('taken');
+            }
         } finally {
             setLoading(false);
         }
@@ -83,13 +140,17 @@ function Signup() {
                 <div className="auth-title">Create your account</div>
                 <div className="auth-sub">Sign up to start tracking your life.</div>
 
-                {error && <div className="auth-error">{error}</div>}
+                {error && (
+                    <div className="auth-error" role="alert">
+                        <strong>Signup failed:</strong> {error}
+                    </div>
+                )}
 
                 <form onSubmit={onSubmit} noValidate>
                     <div className="field mb-md">
                         <label>Username</label>
                         <input
-                            className={'input' + (fieldErrors.username ? ' invalid' : '')}
+                            className={'input' + (fieldErrors.username || usernameStatus === 'taken' ? ' invalid' : '')}
                             type="text"
                             placeholder="Letters, spaces, hyphens, underscores only"
                             value={username}
@@ -101,13 +162,19 @@ function Signup() {
                         />
                         {fieldErrors.username
                             ? <div className="field-error">⚠ {fieldErrors.username}</div>
-                            : <div className="pw-hints">No numbers. Letters, spaces, hyphens, underscores, apostrophes only.</div>
+                            : usernameStatus === 'taken'
+                                ? <div className="field-error">⚠ That username is already taken.</div>
+                                : usernameStatus === 'available'
+                                    ? <div className="field-hint ok">✓ Username is available</div>
+                                    : usernameStatus === 'checking'
+                                        ? <div className="field-hint">Checking…</div>
+                                        : <div className="pw-hints">No numbers. Letters, spaces, hyphens, underscores, apostrophes only.</div>
                         }
                     </div>
                     <div className="field mb-md">
                         <label>Email</label>
                         <input
-                            className={'input' + (fieldErrors.email ? ' invalid' : '')}
+                            className={'input' + (fieldErrors.email || emailStatus === 'taken' ? ' invalid' : '')}
                             type="email"
                             placeholder="you@example.com"
                             value={email}
@@ -116,7 +183,16 @@ function Signup() {
                             required
                             autoComplete="email"
                         />
-                        {fieldErrors.email && <div className="field-error">⚠ {fieldErrors.email}</div>}
+                        {fieldErrors.email
+                            ? <div className="field-error">⚠ {fieldErrors.email}</div>
+                            : emailStatus === 'taken'
+                                ? <div className="field-error">⚠ This email is already registered. <Link to="/login">Sign in?</Link></div>
+                                : emailStatus === 'available'
+                                    ? <div className="field-hint ok">✓ Email is available</div>
+                                    : emailStatus === 'checking'
+                                        ? <div className="field-hint">Checking…</div>
+                                        : null
+                        }
                     </div>
                     <div className="field mb-md">
                         <label>Password</label>

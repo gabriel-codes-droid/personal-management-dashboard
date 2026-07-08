@@ -29,6 +29,8 @@ export const auth = {
     signup: (data) => api.post('/auth/signup', data).then(r => r.data),
     login: (data) => api.post('/auth/login', data).then(r => r.data),
     me: () => api.get('/auth/me').then(r => r.data),
+    checkEmail: (email) => api.get('/auth/check-email', { params: { email } }).then(r => r.data),
+    checkUsername: (username) => api.get('/auth/check-username', { params: { username } }).then(r => r.data),
 };
 
 export const meals = {

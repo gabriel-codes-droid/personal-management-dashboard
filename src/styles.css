@@ -927,6 +927,19 @@ a {
   gap: 4px;
 }
 
+/* Field-level hint (live availability checks, etc.) */
+.field-hint {
+  color: var(--text-2);
+  font-size: 11px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.field-hint.ok {
+  color: var(--success, #2ecc71);
+}
+
 .input.invalid,
 .select.invalid {
   border-color: var(--danger);
