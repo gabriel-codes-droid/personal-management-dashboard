@@ -80,6 +80,7 @@ function Topbar() {
     const { theme, toggle } = useTheme();
     const navigate = useNavigate();
     const [menuOpen, setMenuOpen] = useState(false);
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
     const titles = {
         '/': 'Dashboard',
@@ -106,7 +107,16 @@ function Topbar() {
 
     return (
         <header className="topbar">
-            <h1>{titles[location.pathname] || 'PMD'}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <button 
+                    className="btn ghost mobile-menu-btn" 
+                    onClick={() => setMobileNavOpen(o => !o)}
+                    style={{ display: 'none', padding: '6px 10px' }}
+                >
+                    ☰
+                </button>
+                <h1>{titles[location.pathname] || 'PMD'}</h1>
+            </div>
             <div className="topbar-meta">
                 <span>{today}</span>
                 <button className="theme-btn" onClick={toggle} aria-label="Toggle theme" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
@@ -146,6 +156,34 @@ function Topbar() {
                     )}
                 </div>
             </div>
+            {mobileNavOpen && (
+                <>
+                    <div onClick={() => setMobileNavOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(0,0,0,0.5)' }} />
+                    <div style={{
+                        position: 'fixed',
+                        top: 64,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'var(--bg-1)',
+                        zIndex: 61,
+                        padding: 20,
+                        overflowY: 'auto',
+                    }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            <NavLink to="/" className="nav-link" onClick={() => setMobileNavOpen(false)}>◐ Dashboard</NavLink>
+                            <NavLink to="/finance" className="nav-link" onClick={() => setMobileNavOpen(false)}>◆ Finance</NavLink>
+                            <NavLink to="/meals" className="nav-link" onClick={() => setMobileNavOpen(false)}>◉ Meals</NavLink>
+                            <NavLink to="/activity" className="nav-link" onClick={() => setMobileNavOpen(false)}>▣ Activity</NavLink>
+                            {user?.role === 'admin' && (
+                                <NavLink to="/admin" className="nav-link" onClick={() => setMobileNavOpen(false)}>⚙ Admin</NavLink>
+                            )}
+                            <NavLink to="/notifications" className="nav-link" onClick={() => setMobileNavOpen(false)}>◔ Notifications</NavLink>
+                            <NavLink to="/trash" className="nav-link" onClick={() => setMobileNavOpen(false)}>◌ Trash</NavLink>
+                        </div>
+                    </div>
+                </>
+            )}
         </header>
     );
 }
