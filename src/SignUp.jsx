@@ -29,7 +29,7 @@ function Signup() {
     useEffect(() => {
         const trimmed = email.trim();
         // reset if the field is empty or has a syntax problem
-        if (!trimmed || validateEmail(trimmed)) {
+        if (!trimmed || !validateEmail(trimmed)) {
             setEmailStatus('unknown');
             return;
         }
@@ -48,7 +48,7 @@ function Signup() {
     // Debounced live check for username availability
     useEffect(() => {
         const trimmed = username.trim();
-        if (!trimmed || validateUsername(trimmed)) {
+        if (!trimmed || !validateUsername(trimmed)) {
             setUsernameStatus('unknown');
             return;
         }
