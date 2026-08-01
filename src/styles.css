@@ -1067,6 +1067,53 @@ a {
 
 .auth-switch button:hover { text-decoration: underline; }
 
+/* Password show/hide wrapper */
+.input-wrap {
+  position: relative;
+  display: block;
+}
+
+.input-wrap .input {
+  padding-right: 42px;
+}
+
+.input-suffix {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+}
+
+.input-suffix:hover {
+  color: var(--accent);
+  background: var(--bg-2, rgba(255, 255, 255, 0.04));
+}
+
+/* Forgot password link in auth-switch row */
+.auth-forgot {
+  color: var(--accent-2);
+  text-decoration: none;
+  font-weight: 500;
+  margin-right: 4px;
+}
+
+.auth-forgot:hover { text-decoration: underline; }
+
+.auth-switch-sep {
+  color: var(--text-3);
+  margin: 0 6px;
+  opacity: 0.6;
+}
+
 .auth-theme-toggle {
   position: absolute;
   top: 20px;

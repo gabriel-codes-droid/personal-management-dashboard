@@ -11,6 +11,7 @@ function Login() {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [fieldErrors, setFieldErrors] = useState({});
     const [loading, setLoading] = useState(false);
@@ -80,15 +81,26 @@ function Login() {
                     </div>
                     <div className="field mb-md">
                         <label>Password</label>
-                        <input
-                            className={'input' + (fieldErrors.password ? ' invalid' : '')}
-                            type="password"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={e => { setPassword(e.target.value); if (fieldErrors.password) setFieldErrors(f => ({ ...f, password: '' })); }}
-                            required
-                            autoComplete="current-password"
-                        />
+                        <div className="input-wrap">
+                            <input
+                                className={'input' + (fieldErrors.password ? ' invalid' : '')}
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={e => { setPassword(e.target.value); if (fieldErrors.password) setFieldErrors(f => ({ ...f, password: '' })); }}
+                                required
+                                autoComplete="current-password"
+                            />
+                            <button
+                                type="button"
+                                className="input-suffix"
+                                onClick={() => setShowPassword(s => !s)}
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                title={showPassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showPassword ? '🙈' : '👁'}
+                            </button>
+                        </div>
                         {fieldErrors.password && <div className="field-error">⚠ {fieldErrors.password}</div>}
                     </div>
                     <button type="submit" className="btn primary auth-submit" disabled={loading}>
@@ -97,6 +109,8 @@ function Login() {
                 </form>
 
                 <div className="auth-switch">
+                    <a href="mailto:hello@pmd.local?subject=Password%20reset" className="auth-forgot">Forgot password?</a>
+                    <span className="auth-switch-sep">·</span>
                     No account?
                     <Link to="/signup">Create one</Link>
                 </div>
