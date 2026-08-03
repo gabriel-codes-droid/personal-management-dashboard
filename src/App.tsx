@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './auth';
 import { ThemeProvider, useTheme } from './theme';
+import { AppNotification } from './api';
 import Home from './Home';
 import Finance from './Finance';
 import Meals from './Meals';
@@ -14,7 +15,7 @@ import Signup from './SignUp';
 import './styles.css';
 
 function Sidebar() {
-    const [notifications, setNotifications] = useState(() =>
+    const [notifications, setNotifications] = useState<AppNotification[]>(() =>
         JSON.parse(localStorage.getItem('notifications') || '[]')
     );
 
@@ -32,11 +33,11 @@ function Sidebar() {
     const unread = notifications.filter(n => !n.read).length;
     const { user } = useAuth();
 
-    const link = (to, icon, label, badge) => (
+    const link = (to: string, icon: string, label: string, badge?: number) => (
         <NavLink to={to} end={to === '/'} className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
             <span className="icon">{icon}</span>
             <span>{label}</span>
-            {badge > 0 && <span className="badge">{badge}</span>}
+            {badge && badge > 0 && <span className="badge">{badge}</span>}
         </NavLink>
     );
 
@@ -82,7 +83,7 @@ function Topbar() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-    const titles = {
+    const titles: Record<string, string> = {
         '/': 'Dashboard',
         '/finance': 'Finance',
         '/meals': 'Meals',
@@ -223,7 +224,7 @@ function ProtectedShell() {
     );
 }
 
-function AuthGate({ children }) {
+function AuthGate({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth();
     if (loading) {
         return (
@@ -234,7 +235,7 @@ function AuthGate({ children }) {
         );
     }
     if (user) return <Navigate to="/" replace />;
-    return children;
+    return <>{children}</>;
 }
 
 function Shell() {

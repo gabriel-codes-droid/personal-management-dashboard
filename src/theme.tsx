@@ -1,11 +1,19 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
-const ThemeContext = createContext(null);
+type Theme = 'dark' | 'light';
+
+interface ThemeContextType {
+    theme: Theme;
+    toggle: () => void;
+    setTheme: (theme: Theme) => void;
+}
+
+const ThemeContext = createContext<ThemeContextType | null>(null);
 
 const STORAGE_KEY = 'pmd_theme';
 
-export function ThemeProvider({ children }) {
-    const [theme, setTheme] = useState(() => localStorage.getItem(STORAGE_KEY) || 'dark');
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+    const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(STORAGE_KEY) as Theme) || 'dark');
 
     useEffect(() => {
         document.documentElement.dataset.theme = theme;
@@ -21,7 +29,7 @@ export function ThemeProvider({ children }) {
     );
 }
 
-export const useTheme = () => {
+export const useTheme = (): ThemeContextType => {
     const ctx = useContext(ThemeContext);
     if (!ctx) throw new Error('useTheme must be inside ThemeProvider');
     return ctx;

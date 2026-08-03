@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from './auth';
 import { useTheme } from './theme';
 import { auth as authApi } from './api';
-import { validateUsername, validateEmail, validatePassword, passwordStrength } from './validation';
+import { validateUsername, validateEmail, validatePassword, passwordStrength, PasswordStrength } from './validation';
+
+type AvailabilityStatus = 'unknown' | 'checking' | 'available' | 'taken';
 
 function Signup() {
     const navigate = useNavigate();
@@ -15,14 +17,14 @@ function Signup() {
     const [password, setPassword] = useState('');
     const [confirm, setConfirm] = useState('');
     const [error, setError] = useState('');
-    const [fieldErrors, setFieldErrors] = useState({});
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
 
     // availability: 'unknown' | 'checking' | 'available' | 'taken'
-    const [emailStatus, setEmailStatus] = useState('unknown');
-    const [usernameStatus, setUsernameStatus] = useState('unknown');
+    const [emailStatus, setEmailStatus] = useState<AvailabilityStatus>('unknown');
+    const [usernameStatus, setUsernameStatus] = useState<AvailabilityStatus>('unknown');
 
-    const pwStrength = passwordStrength(password);
+    const pwStrength: PasswordStrength = passwordStrength(password);
     const confirmMismatch = confirm.length > 0 && password !== confirm;
 
     // Debounced live check for email availability
@@ -64,12 +66,12 @@ function Signup() {
         return () => clearTimeout(t);
     }, [username]);
 
-    const onSubmit = async (e) => {
+    const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
 
         // Re-run all validations at submit time so a "fresh" submit can't sneak past
-        const errs = {};
+        const errs: Record<string, string> = {};
         const uErr = validateUsername(username);
         if (uErr) errs.username = uErr;
         else if (usernameStatus === 'taken') errs.username = 'That username is already taken.';
@@ -87,7 +89,7 @@ function Signup() {
         try {
             await signup(username.trim(), email.trim(), password);
             navigate('/', { replace: true });
-        } catch (err) {
+        } catch (err: any) {
             // Surface the backend's reason. axios error shape: err.response.data.message
             const status = err.response?.status;
             const serverMsg = err.response?.data?.message;

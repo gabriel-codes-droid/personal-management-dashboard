@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { admin } from './api';
+import { admin, User, AdminStats } from './api';
 import { useAuth } from './auth';
 
 function Admin() {
     const { user: currentUser } = useAuth();
-    const [users, setUsers] = useState([]);
-    const [stats, setStats] = useState(null);
+    const [users, setUsers] = useState<User[]>([]);
+    const [stats, setStats] = useState<AdminStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -26,7 +26,7 @@ function Admin() {
         })();
     }, []);
 
-    const setRole = async (id, role) => {
+    const setRole = async (id: string, role: 'user' | 'admin') => {
         try {
             await admin.setRole(id, role);
             await reload();
@@ -35,12 +35,12 @@ function Admin() {
         }
     };
 
-    const removeUser = async (id, email) => {
+    const removeUser = async (id: string, email: string) => {
         if (!confirm(`Delete user ${email} and ALL their data? This cannot be undone.`)) return;
         try {
             await admin.deleteUser(id);
             await reload();
-        } catch (e) {
+        } catch (e: any) {
             setError(e.response?.data?.message || 'Failed to delete user.');
         }
     };
@@ -66,22 +66,22 @@ function Admin() {
                     <div className="kpi accent">
                         <div className="kpi-icon">◔</div>
                         <div className="kpi-label">Users</div>
-                        <div className="kpi-value">{stats.users}</div>
+                        <div className="kpi-value">{stats.totalUsers}</div>
                     </div>
                     <div className="kpi finance">
                         <div className="kpi-icon">◆</div>
                         <div className="kpi-label">Transactions</div>
-                        <div className="kpi-value">{stats.transactions}</div>
+                        <div className="kpi-value">{stats.totalTransactions}</div>
                     </div>
                     <div className="kpi meals">
                         <div className="kpi-icon">◉</div>
                         <div className="kpi-label">Meals</div>
-                        <div className="kpi-value">{stats.meals}</div>
+                        <div className="kpi-value">{stats.totalMeals}</div>
                     </div>
                     <div className="kpi activity">
                         <div className="kpi-icon">▣</div>
                         <div className="kpi-label">Activities</div>
-                        <div className="kpi-value">{stats.activities}</div>
+                        <div className="kpi-value">{stats.totalActivities}</div>
                     </div>
                 </div>
             )}

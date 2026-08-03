@@ -1,9 +1,18 @@
 import { useState } from 'react';
 
+interface TrashItem {
+    id: string;
+    itemType: 'transaction' | 'meal' | 'activity' | 'notification';
+    title?: string;
+    description?: string;
+    message?: string;
+    deletedAt: string;
+}
+
 // Trash kept as client-side for now — deleted items are removed from backend.
 // Keeping the page so the UI doesn't break; restore from backend via re-create if needed.
 function Trash() {
-    const [trash] = useState(() => JSON.parse(localStorage.getItem('trash') || '[]'));
+    const [trash] = useState<TrashItem[]>(() => JSON.parse(localStorage.getItem('trash') || '[]'));
 
     return (
         <div>

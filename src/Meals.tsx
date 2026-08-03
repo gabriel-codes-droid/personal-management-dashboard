@@ -1,19 +1,29 @@
 import { useState, useEffect } from 'react';
-import { meals as mealApi } from './api';
+import { meals as mealApi, Meal } from './api';
 import {
     PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
 } from 'recharts';
 
 const DAILY_TARGET = 2000;
-const catColors = { breakfast: '#f59e0b', lunch: '#10b981', dinner: '#3b82f6', snack: '#a855f7' };
+const catColors: Record<string, string> = { breakfast: '#f59e0b', lunch: '#10b981', dinner: '#3b82f6', snack: '#a855f7' };
+
+interface SearchResult {
+    name: string;
+    calories: number;
+}
+
+interface Ingredient {
+    name: string;
+    calories: number;
+}
 
 function Meals() {
-    const [meals, setMeals] = useState([]);
+    const [meals, setMeals] = useState<Meal[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchResults, setSearchResults] = useState([]);
+    const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const [loadingSearch, setLoadingSearch] = useState(false);
     const [error, setError] = useState('');
-    const [mode, setMode] = useState('search');
+    const [mode, setMode] = useState<'search' | 'manual' | 'dish'>('search');
 
     const [query, setQuery] = useState('');
     const [manualTitle, setManualTitle] = useState('');
@@ -22,7 +32,7 @@ function Meals() {
     const [dishName, setDishName] = useState('');
     const [ingredientName, setIngredientName] = useState('');
     const [ingredientCalories, setIngredientCalories] = useState('');
-    const [ingredients, setIngredients] = useState([]);
+    const [ingredients, setIngredients] = useState<Ingredient[]>([]);
 
     const reload = async () => {
         try {

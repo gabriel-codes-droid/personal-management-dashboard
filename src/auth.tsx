@@ -1,10 +1,19 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { auth as authApi } from './api';
+import { auth as authApi, User } from './api';
 
-const AuthContext = createContext(null);
+interface AuthContextType {
+    user: User | null;
+    token: string | null;
+    loading: boolean;
+    login: (email: string, password: string) => Promise<User>;
+    signup: (username: string, email: string, password: string) => Promise<User>;
+    logout: () => void;
+}
 
-export function AuthProvider({ children }) {
-    const [user, setUser] = useState(() => {
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+    const [user, setUser] = useState<User | null>(() => {
         try {
             const raw = localStorage.getItem('pmd_user');
             return raw ? JSON.parse(raw) : null;
@@ -12,7 +21,7 @@ export function AuthProvider({ children }) {
             return null;
         }
     });
-    const [token, setToken] = useState(() => localStorage.getItem('pmd_token'));
+    const [token, setToken] = useState<string | null>(() => localStorage.getItem('pmd_token'));
     const [loading, setLoading] = useState(true);
 
     // Validate token on mount
@@ -40,7 +49,7 @@ export function AuthProvider({ children }) {
         return () => { cancelled = true; };
     }, [token]);
 
-    const login = useCallback(async (email, password) => {
+    const login = useCallback(async (email: string, password: string) => {
         const data = await authApi.login({ email, password });
         localStorage.setItem('pmd_token', data.token);
         localStorage.setItem('pmd_user', JSON.stringify(data.user));
@@ -49,7 +58,7 @@ export function AuthProvider({ children }) {
         return data.user;
     }, []);
 
-    const signup = useCallback(async (username, email, password) => {
+    const signup = useCallback(async (username: string, email: string, password: string) => {
         const data = await authApi.signup({ username, email, password });
         localStorage.setItem('pmd_token', data.token);
         localStorage.setItem('pmd_user', JSON.stringify(data.user));
@@ -72,7 +81,7 @@ export function AuthProvider({ children }) {
     );
 }
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
     const ctx = useContext(AuthContext);
     if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
     return ctx;

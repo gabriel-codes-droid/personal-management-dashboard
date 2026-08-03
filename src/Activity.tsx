@@ -1,20 +1,20 @@
 import { useEffect, useState, useRef } from 'react';
-import { activities as actApi } from './api';
+import { activities as actApi, Activity } from './api';
 
 function Activity() {
-    const [mode, setMode] = useState('schedule');
+    const [mode, setMode] = useState<'schedule' | 'countdown'>('schedule');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
-    const [activities, setActivities] = useState([]);
+    const [activities, setActivities] = useState<Activity[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [countdownInput, setCountdownInput] = useState('');
     const [time, setTime] = useState(0);
     const [isRunning, setIsRunning] = useState(false);
     const [finished, setFinished] = useState(false);
-    const intervalRef = useRef(null);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const [now, setNow] = useState(new Date());
 
     const reload = async () => {

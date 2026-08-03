@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from './auth';
 import { useTheme } from './theme';
@@ -13,15 +13,15 @@ function Login() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
-    const [fieldErrors, setFieldErrors] = useState({});
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
 
     // block submission if any field is empty or invalid
-    const onSubmit = async (e) => {
+    const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
 
-        const errs = {};
+        const errs: Record<string, string> = {};
         const emailErr = validateEmail(email);
         if (emailErr) errs.email = emailErr;
         if (!password) errs.password = 'Password is required.';
@@ -32,7 +32,7 @@ function Login() {
         try {
             await login(email.trim(), password);
             navigate('/', { replace: true });
-        } catch (err) {
+        } catch (err: any) {
             setError(err.response?.data?.message || 'Login failed. Please try again.');
         } finally {
             setLoading(false);

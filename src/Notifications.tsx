@@ -1,17 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { AppNotification } from './api';
+import { notificationService } from './notificationService';
 
 function Notifications() {
-    const [notifications, setNotifications] = useState(() => JSON.parse(localStorage.getItem('notifications') || '[]'));
+    const [notifications, setNotifications] = useState<AppNotification[]>(() => notificationService.getNotifications());
+    const [permission, setPermission] = useState<string>('default');
+
+    useEffect(() => {
+        const checkPermission = () => {
+            if ('Notification' in window) {
+                setPermission(Notification.permission);
+            }
+        };
+        checkPermission();
+    }, []);
+
+    const refreshNotifications = () => {
+        setNotifications(notificationService.getNotifications());
+    };
 
     const clearAll = () => {
-        localStorage.setItem('notifications', '[]');
+        notificationService.clearAll();
         setNotifications([]);
     };
 
     const markAllRead = () => {
-        const updated = notifications.map(n => ({ ...n, read: true }));
-        localStorage.setItem('notifications', JSON.stringify(updated));
-        setNotifications(updated);
+        notificationService.markAllAsRead();
+        refreshNotifications();
+    };
+
+    const requestPermission = async () => {
+        const granted = await notificationService.requestPermission();
+        setPermission(granted ? 'granted' : 'denied');
     };
 
     const unread = notifications.filter(n => !n.read).length;
@@ -36,6 +56,30 @@ function Notifications() {
                     <div className="kpi-icon" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}>✓</div>
                     <div className="kpi-label">Read</div>
                     <div className="kpi-value">{notifications.length - unread}</div>
+                </div>
+            </div>
+
+            <div className="card mb-md">
+                <div className="card-header">
+                    <div>
+                        <div className="card-title">Push Notifications</div>
+                        <div className="card-sub">Enable browser notifications for real-time alerts</div>
+                    </div>
+                    <button 
+                        className="btn ghost sm" 
+                        onClick={requestPermission}
+                        disabled={permission === 'granted'}
+                    >
+                        {permission === 'granted' ? '✓ Enabled' : permission === 'denied' ? '✕ Blocked' : 'Enable'}
+                    </button>
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
+                    {permission === 'granted' 
+                        ? 'Push notifications are enabled. You will receive alerts for important events.'
+                        : permission === 'denied'
+                        ? 'Push notifications are blocked. Enable them in your browser settings.'
+                        : 'Click "Enable" to receive push notifications for important events.'
+                    }
                 </div>
             </div>
 

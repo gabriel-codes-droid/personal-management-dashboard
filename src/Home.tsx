@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { transactions as txApi, meals as mealApi, activities as actApi } from './api';
+import { transactions as txApi, meals as mealApi, activities as actApi, Transaction, Meal, Activity, AppNotification } from './api';
+import { notificationService } from './notificationService';
 import {
     AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, BarChart, Bar, CartesianGrid
 } from 'recharts';
 
-const last7Days = () => {
-    const days = [];
+const last7Days = (): string[] => {
+    const days: string[] = [];
     for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
@@ -16,9 +17,9 @@ const last7Days = () => {
     return days;
 };
 
-const fmtShortDay = (iso) => new Date(iso).toLocaleDateString(undefined, { weekday: 'short' });
+const fmtShortDay = (iso: string) => new Date(iso).toLocaleDateString(undefined, { weekday: 'short' });
 
-const dayBucket = (date) => {
+const dayBucket = (date: string) => {
     const d = new Date(date);
     return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 };
@@ -26,11 +27,11 @@ const dayBucket = (date) => {
 const DAY_MS = 86400000;
 
 function Home() {
-    const [transactions, setTransactions] = useState([]);
-    const [meals, setMeals] = useState([]);
-    const [activities, setActivities] = useState([]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [meals, setMeals] = useState<Meal[]>([]);
+    const [activities, setActivities] = useState<Activity[]>([]);
     const [loading, setLoading] = useState(true);
-    const [notifications, setNotifications] = useState([]);
+    const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
     useEffect(() => {
         (async () => {
@@ -42,39 +43,31 @@ function Home() {
                 setMeals(ms);
                 setActivities(acs);
 
-                // generate fresh insights based on current data
-                const balance = txs.reduce((s, t) => s + t.amount, 0);
-                const cals = ms.reduce((s, m) => s + Number(m.calories), 0);
-                const done = acs.filter(a => a.done).length;
-                const generated = [];
+                // Request notification permission on first load
+                await notificationService.requestPermission();
+                await notificationService.registerServiceWorker();
 
-                if (balance < 0)
-                    generated.push({ type: 'danger', icon: '💸', message: 'Your balance is negative. Review your expenses.', timestamp: new Date().toLocaleString(), read: false });
-                else if (balance < 100)
-                    generated.push({ type: 'warning', icon: '⚠️', message: 'Balance is getting low. Be mindful of spending.', timestamp: new Date().toLocaleString(), read: false });
-                else
-                    generated.push({ type: 'success', icon: '💰', message: 'Finances are healthy. Keep it up.', timestamp: new Date().toLocaleString(), read: false });
+                // Generate notifications using the service
+                const financeNotifications = notificationService.generateFinanceNotifications(txs);
+                const mealNotifications = notificationService.generateMealNotifications(ms);
+                const activityNotifications = notificationService.generateActivityNotifications(acs);
 
-                if (cals > 3000)
-                    generated.push({ type: 'danger', icon: '🚨', message: 'Over 3000 kcal logged today. Consider lighter meals.', timestamp: new Date().toLocaleString(), read: false });
-                else if (cals > 2000)
-                    generated.push({ type: 'warning', icon: '🍔', message: 'Above 2000 kcal daily intake.', timestamp: new Date().toLocaleString(), read: false });
-                else if (ms.length > 0)
-                    generated.push({ type: 'success', icon: '✅', message: 'Calorie intake within healthy range.', timestamp: new Date().toLocaleString(), read: false });
-                else
-                    generated.push({ type: 'info', icon: '🍽️', message: 'No meals logged yet today.', timestamp: new Date().toLocaleString(), read: false });
+                const generated = [...financeNotifications, ...mealNotifications, ...activityNotifications];
+                
+                // Only add new notifications that don't already exist
+                const existingNotifications = notificationService.getNotifications();
+                const newNotifications = generated.filter(newNotif => 
+                    !existingNotifications.some(existing => 
+                        existing.message === newNotif.message && 
+                        existing.type === newNotif.type
+                    )
+                );
 
-                if (acs.length === 0)
-                    generated.push({ type: 'info', icon: '🏃', message: 'No activities scheduled. Add some to stay on track.', timestamp: new Date().toLocaleString(), read: false });
-                else if (acs.length >= 6 && done < acs.length / 2)
-                    generated.push({ type: 'danger', icon: '😓', message: 'Many pending activities. You may be overloading yourself.', timestamp: new Date().toLocaleString(), read: false });
-                else if (done === acs.length)
-                    generated.push({ type: 'success', icon: '🏆', message: 'All activities completed for today!', timestamp: new Date().toLocaleString(), read: false });
-                else
-                    generated.push({ type: 'info', icon: '📋', message: `${acs.length - done} activities still pending.`, timestamp: new Date().toLocaleString(), read: false });
+                if (newNotifications.length > 0) {
+                    newNotifications.forEach(notif => notificationService.addNotification(notif));
+                }
 
-                localStorage.setItem('notifications', JSON.stringify(generated));
-                setNotifications(generated);
+                setNotifications(notificationService.getNotifications());
             } catch (e) {
                 console.error('Dashboard load failed', e);
             } finally {

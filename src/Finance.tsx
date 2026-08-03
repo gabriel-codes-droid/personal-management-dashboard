@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { transactions as txApi } from './api';
+import { transactions as txApi, Transaction } from './api';
 import {
     AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
-    PieChart, Pie, Cell, CartesianGrid
+    PieChart, Pie, Cell, CartesianGrid, BarChart, Bar, LineChart, Line
 } from 'recharts';
 
 const CATS = [
@@ -16,8 +16,8 @@ const CATS = [
     { key: 'other', label: 'Other', icon: '○' },
 ];
 
-const last7Days = () => {
-    const days = [];
+const last7Days = (): string[] => {
+    const days: string[] = [];
     for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
@@ -25,14 +25,28 @@ const last7Days = () => {
     }
     return days;
 };
-const fmtShortDay = (iso) => new Date(iso).toLocaleDateString(undefined, { weekday: 'short' });
-const dayBucket = (date) => {
+
+const last6Months = (): Array<{ month: string; year: number }> => {
+    const months: Array<{ month: string; year: number }> = [];
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        months.push({
+            month: d.toLocaleDateString(undefined, { month: 'short' }),
+            year: d.getFullYear()
+        });
+    }
+    return months;
+};
+
+const fmtShortDay = (iso: string) => new Date(iso).toLocaleDateString(undefined, { weekday: 'short' });
+const dayBucket = (date: string) => {
     const d = new Date(date);
     return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 };
 
-const catColor = (key) => {
-    const colors = {
+const catColor = (key: string) => {
+    const colors: Record<string, string> = {
         salary: '#10b981', food: '#f97316', transport: '#3b82f6',
         shopping: '#ec4899', bills: '#ef4444', entertainment: '#a855f7',
         health: '#06b6d4', other: '#64748b'
@@ -40,15 +54,28 @@ const catColor = (key) => {
     return colors[key] || '#64748b';
 };
 
+interface SavingsGoal {
+    id: string;
+    name: string;
+    target: number;
+    current: number;
+    deadline: string;
+}
+
 function Finance() {
-    const [transactions, setTransactions] = useState([]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
     const [description, setDescription] = useState('');
     const [amount, setAmount] = useState('');
-    const [type, setType] = useState('expense');
+    const [type, setType] = useState<'income' | 'expense'>('expense');
     const [category, setCategory] = useState('food');
     const [filter, setFilter] = useState('all');
     const [error, setError] = useState('');
+    const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([
+        { id: '1', name: 'Emergency Fund', target: 10000, current: 3500, deadline: '2024-12-31' },
+        { id: '2', name: 'Vacation', target: 3000, current: 1200, deadline: '2024-06-01' },
+    ]);
+    const [showGoals, setShowGoals] = useState(false);
 
     const reload = async () => {
         try {
@@ -77,12 +104,12 @@ function Finance() {
             setDescription('');
             setAmount('');
             await reload();
-        } catch (e) {
+        } catch (e: any) {
             setError(e.response?.data?.message || 'Failed to add transaction.');
         }
     };
 
-    const removeTransaction = async (id) => {
+    const removeTransaction = async (id: string) => {
         try {
             await txApi.remove(id);
             await reload();
@@ -112,6 +139,32 @@ function Finance() {
         name: c.label,
         value: transactions.filter(t => t.amount < 0 && t.category === c.key).reduce((s, t) => s + Math.abs(t.amount), 0)
     })).filter(x => x.value > 0);
+
+    // Monthly comparison data
+    const months = last6Months();
+    const monthlyData = months.map(({ month, year }) => {
+        const monthTransactions = transactions.filter(t => {
+            const d = new Date(t.createdAt);
+            return d.getMonth() === new Date(`${month} 1, ${year}`).getMonth() && 
+                   d.getFullYear() === year;
+        });
+        const income = monthTransactions.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+        const expense = monthTransactions.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+        return { month, income, expense, savings: income - expense };
+    });
+
+    // Income vs Expense trend
+    const incomeExpenseData = days.map(iso => {
+        const start = new Date(iso).setHours(0, 0, 0, 0);
+        const end = new Date(iso).setHours(23, 59, 59, 999);
+        const dayTransactions = transactions.filter(t => {
+            const ts = new Date(t.createdAt).getTime();
+            return ts >= start && ts <= end;
+        });
+        const income = dayTransactions.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+        const expense = dayTransactions.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+        return { day: fmtShortDay(iso), income, expense };
+    });
 
     if (loading) {
         return (
@@ -236,6 +289,101 @@ function Finance() {
                         )}
                     </div>
                 </div>
+            </div>
+
+            <div className="grid grid-2 mb-md">
+                <div className="card">
+                    <div className="card-header">
+                        <div>
+                            <div className="card-title">Income vs Expenses</div>
+                            <div className="card-sub">Daily comparison (7 days)</div>
+                        </div>
+                    </div>
+                    <div style={{ width: '100%', height: 240 }}>
+                        <ResponsiveContainer>
+                            <BarChart data={incomeExpenseData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#232938" />
+                                <XAxis dataKey="day" stroke="#5b6377" tick={{ fontSize: 11 }} />
+                                <YAxis stroke="#5b6377" tick={{ fontSize: 11 }} />
+                                <Tooltip />
+                                <Bar dataKey="income" fill="#10b981" name="Income" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="expense" fill="#ef4444" name="Expense" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+                <div className="card">
+                    <div className="card-header">
+                        <div>
+                            <div className="card-title">Monthly Overview</div>
+                            <div className="card-sub">6-month trend</div>
+                        </div>
+                    </div>
+                    <div style={{ width: '100%', height: 240 }}>
+                        <ResponsiveContainer>
+                            <LineChart data={monthlyData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#232938" />
+                                <XAxis dataKey="month" stroke="#5b6377" tick={{ fontSize: 11 }} />
+                                <YAxis stroke="#5b6377" tick={{ fontSize: 11 }} />
+                                <Tooltip />
+                                <Line type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} name="Income" dot={{ r: 4 }} />
+                                <Line type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={2} name="Expense" dot={{ r: 4 }} />
+                                <Line type="monotone" dataKey="savings" stroke="#3b82f6" strokeWidth={2} name="Savings" dot={{ r: 4 }} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+
+            <div className="card mb-md">
+                <div className="card-header">
+                    <div>
+                        <div className="card-title">Savings Goals</div>
+                        <div className="card-sub">Track your financial targets</div>
+                    </div>
+                    <button className="btn ghost sm" onClick={() => setShowGoals(!showGoals)}>
+                        {showGoals ? 'Hide' : 'Show'}
+                    </button>
+                </div>
+                {showGoals && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginTop: 16 }}>
+                        {savingsGoals.map(goal => {
+                            const progress = Math.min(100, (goal.current / goal.target) * 100);
+                            const remaining = goal.target - goal.current;
+                            const daysLeft = Math.max(0, Math.ceil((new Date(goal.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+                            return (
+                                <div key={goal.id} style={{ 
+                                    background: 'var(--bg-2)', 
+                                    border: '1px solid var(--border)', 
+                                    borderRadius: 'var(--r-md)', 
+                                    padding: 16 
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                        <div style={{ fontWeight: 600, fontSize: 14 }}>{goal.name}</div>
+                                        <div style={{ fontSize: 12, color: 'var(--text-2)' }}>{daysLeft} days left</div>
+                                    </div>
+                                    <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--success)', marginBottom: 4 }}>
+                                        ${goal.current.toLocaleString()}
+                                    </div>
+                                    <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 12 }}>
+                                        of ${goal.target.toLocaleString()} goal (${remaining.toLocaleString()} remaining)
+                                    </div>
+                                    <div style={{ height: 8, background: 'var(--bg-1)', borderRadius: 4, overflow: 'hidden' }}>
+                                        <div style={{ 
+                                            height: '100%', 
+                                            width: `${progress}%`, 
+                                            background: progress >= 100 ? 'var(--success)' : 'var(--finance)',
+                                            transition: 'width 0.3s ease'
+                                        }} />
+                                    </div>
+                                    <div style={{ fontSize: 11, color: 'var(--text-2)', marginTop: 4, textAlign: 'right' }}>
+                                        {progress.toFixed(1)}% complete
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
             <div className="card">
