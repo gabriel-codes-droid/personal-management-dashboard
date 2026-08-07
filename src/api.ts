@@ -55,6 +55,14 @@ export interface Meal {
     calories: number;
     category: 'breakfast' | 'lunch' | 'dinner' | 'snack';
     source: 'manual' | 'api' | 'dish';
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+    fiber?: number;
+    sugars?: number;
+    sodium?: number;
+    barcode?: string;
+    brand?: string;
     createdAt: string;
     updatedAt: string;
 }

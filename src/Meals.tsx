@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { meals as mealApi, Meal } from './api';
 import {
-    PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
+    PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid
 } from 'recharts';
 
 const DAILY_TARGET = 2000;
@@ -10,11 +10,32 @@ const catColors: Record<string, string> = { breakfast: '#f59e0b', lunch: '#10b98
 interface SearchResult {
     name: string;
     calories: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+    fiber?: number;
+    sugars?: number;
+    sodium?: number;
+    barcode?: string;
+    brand?: string;
 }
 
 interface Ingredient {
     name: string;
     calories: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+}
+
+interface NutritionData {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+    sugars: number;
+    sodium: number;
 }
 
 function Meals() {
@@ -23,16 +44,26 @@ function Meals() {
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const [loadingSearch, setLoadingSearch] = useState(false);
     const [error, setError] = useState('');
-    const [mode, setMode] = useState<'search' | 'manual' | 'dish'>('search');
+    const [mode, setMode] = useState<'search' | 'manual' | 'dish' | 'barcode'>('search');
 
     const [query, setQuery] = useState('');
     const [manualTitle, setManualTitle] = useState('');
     const [manualCalories, setManualCalories] = useState('');
+    const [manualProtein, setManualProtein] = useState('');
+    const [manualCarbs, setManualCarbs] = useState('');
+    const [manualFat, setManualFat] = useState('');
     const [manualCategory, setManualCategory] = useState('lunch');
     const [dishName, setDishName] = useState('');
     const [ingredientName, setIngredientName] = useState('');
     const [ingredientCalories, setIngredientCalories] = useState('');
+    const [ingredientProtein, setIngredientProtein] = useState('');
+    const [ingredientCarbs, setIngredientCarbs] = useState('');
+    const [ingredientFat, setIngredientFat] = useState('');
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+    const [selectedProduct, setSelectedProduct] = useState<SearchResult | null>(null);
+    const [barcodeInput, setBarcodeInput] = useState('');
+    const [scanning, setScanning] = useState(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
 
     const reload = async () => {
         try {
@@ -57,7 +88,7 @@ function Meals() {
         setSearchResults([]);
         try {
             const response = await fetch(
-                `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=8`
+                `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=8&fields=product_name,nutriments,code,brands`
             );
             const data = await response.json();
             const results = (data.products || [])
@@ -65,7 +96,15 @@ function Meals() {
                 .slice(0, 8)
                 .map(p => ({
                     name: p.product_name,
-                    calories: Math.round(p.nutriments['energy-kcal_100g']),
+                    calories: Math.round(p.nutriments['energy-kcal_100g'] || 0),
+                    protein: Math.round(p.nutriments?.['proteins_100g'] || 0),
+                    carbs: Math.round(p.nutriments?.['carbohydrates_100g'] || 0),
+                    fat: Math.round(p.nutriments?.['fat_100g'] || 0),
+                    fiber: Math.round(p.nutriments?.['fiber_100g'] || 0),
+                    sugars: Math.round(p.nutriments?.['sugars_100g'] || 0),
+                    sodium: Math.round(p.nutriments?.['sodium_100g'] || 0),
+                    barcode: p.code,
+                    brand: p.brands,
                 }));
             if (results.length === 0) setError('No results found. Try a different name.');
             setSearchResults(results);
@@ -75,11 +114,58 @@ function Meals() {
         setLoadingSearch(false);
     };
 
-    const addMealFromSearch = async (meal) => {
+    const searchByBarcode = async (barcode: string) => {
+        setLoadingSearch(true);
+        setError('');
         try {
-            await mealApi.create({ title: meal.name, calories: meal.calories, category: 'snack', source: 'api' });
+            const response = await fetch(
+                `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`
+            );
+            const data = await response.json();
+            if (data.status === 1 && data.product) {
+                const p = data.product;
+                const result: SearchResult = {
+                    name: p.product_name,
+                    calories: Math.round(p.nutriments?.['energy-kcal_100g'] || 0),
+                    protein: Math.round(p.nutriments?.['proteins_100g'] || 0),
+                    carbs: Math.round(p.nutriments?.['carbohydrates_100g'] || 0),
+                    fat: Math.round(p.nutriments?.['fat_100g'] || 0),
+                    fiber: Math.round(p.nutriments?.['fiber_100g'] || 0),
+                    sugars: Math.round(p.nutriments?.['sugars_100g'] || 0),
+                    sodium: Math.round(p.nutriments?.['sodium_100g'] || 0),
+                    barcode: p.code,
+                    brand: p.brands,
+                };
+                setSelectedProduct(result);
+                setSearchResults([result]);
+            } else {
+                setError('Product not found with this barcode.');
+            }
+        } catch {
+            setError('Failed to fetch product data. Check the barcode and try again.');
+        }
+        setLoadingSearch(false);
+    };
+
+    const addMealFromSearch = async (meal: SearchResult) => {
+        try {
+            await mealApi.create({ 
+                title: meal.name, 
+                calories: meal.calories, 
+                category: 'snack', 
+                source: 'api',
+                protein: meal.protein,
+                carbs: meal.carbs,
+                fat: meal.fat,
+                fiber: meal.fiber,
+                sugars: meal.sugars,
+                sodium: meal.sodium,
+                barcode: meal.barcode,
+                brand: meal.brand
+            });
             setSearchResults([]);
             setQuery('');
+            setSelectedProduct(null);
             await reload();
         } catch (e) {
             setError('Failed to add meal.');
@@ -89,9 +175,20 @@ function Meals() {
     const addMealManually = async () => {
         if (manualTitle.trim() === '' || manualCalories === '') return;
         try {
-            await mealApi.create({ title: manualTitle.trim(), calories: Number(manualCalories), category: manualCategory, source: 'manual' });
+            await mealApi.create({ 
+                title: manualTitle.trim(), 
+                calories: Number(manualCalories), 
+                category: manualCategory, 
+                source: 'manual',
+                protein: manualProtein ? Number(manualProtein) : undefined,
+                carbs: manualCarbs ? Number(manualCarbs) : undefined,
+                fat: manualFat ? Number(manualFat) : undefined
+            });
             setManualTitle('');
             setManualCalories('');
+            setManualProtein('');
+            setManualCarbs('');
+            setManualFat('');
             await reload();
         } catch (e) {
             setError('Failed to add meal.');
@@ -100,9 +197,18 @@ function Meals() {
 
     const addIngredient = () => {
         if (ingredientName.trim() === '' || ingredientCalories === '') return;
-        setIngredients(prev => [...prev, { name: ingredientName.trim(), calories: Number(ingredientCalories) }]);
+        setIngredients(prev => [...prev, { 
+            name: ingredientName.trim(), 
+            calories: Number(ingredientCalories),
+            protein: ingredientProtein ? Number(ingredientProtein) : undefined,
+            carbs: ingredientCarbs ? Number(ingredientCarbs) : undefined,
+            fat: ingredientFat ? Number(ingredientFat) : undefined
+        }]);
         setIngredientName('');
         setIngredientCalories('');
+        setIngredientProtein('');
+        setIngredientCarbs('');
+        setIngredientFat('');
     };
 
     const addDish = async () => {
@@ -131,6 +237,32 @@ function Meals() {
     const remaining = Math.max(0, DAILY_TARGET - totalCalories);
     const pct = Math.min(100, (totalCalories / DAILY_TARGET) * 100);
 
+    // Calculate total nutrition
+    const totalNutrition: NutritionData = meals.reduce((acc, m) => ({
+        calories: acc.calories + Number(m.calories),
+        protein: acc.protein + (Number(m.protein) || 0),
+        carbs: acc.carbs + (Number(m.carbs) || 0),
+        fat: acc.fat + (Number(m.fat) || 0),
+        fiber: acc.fiber + (Number(m.fiber) || 0),
+        sugars: acc.sugars + (Number(m.sugars) || 0),
+        sodium: acc.sodium + (Number(m.sodium) || 0),
+    }), { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugars: 0, sodium: 0 });
+
+    // Weekly nutrition data for charts
+    const last7DaysNutrition = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (6 - i));
+        const dateStr = date.toISOString().slice(0, 10);
+        const dayMeals = meals.filter(m => m.createdAt.startsWith(dateStr));
+        return {
+            day: date.toLocaleDateString(undefined, { weekday: 'short' }),
+            calories: dayMeals.reduce((s, m) => s + Number(m.calories), 0),
+            protein: dayMeals.reduce((s, m) => s + (Number(m.protein) || 0), 0),
+            carbs: dayMeals.reduce((s, m) => s + (Number(m.carbs) || 0), 0),
+            fat: dayMeals.reduce((s, m) => s + (Number(m.fat) || 0), 0),
+        };
+    });
+
     const cats = ['breakfast', 'lunch', 'dinner', 'snack'];
     const catData = cats.map(c => ({
         name: c.charAt(0).toUpperCase() + c.slice(1),
@@ -151,7 +283,7 @@ function Meals() {
             <div className="section-title">Meal & Calorie Tracker</div>
             <div className="section-sub">Log meals manually, build a dish, or fetch from the OpenFoodFacts API.</div>
 
-            <div className="grid grid-3 mb-md">
+            <div className="grid grid-4 mb-md">
                 <div className="kpi meals">
                     <div className="kpi-icon">◉</div>
                     <div className="kpi-label">Today</div>
@@ -160,16 +292,22 @@ function Meals() {
                     <div className="kpi-sub muted mt-sm">{pct.toFixed(0)}% of {DAILY_TARGET} goal</div>
                 </div>
                 <div className="kpi accent">
-                    <div className="kpi-icon">○</div>
-                    <div className="kpi-label">Remaining</div>
-                    <div className="kpi-value">{remaining}<span className="muted" style={{ fontSize: 14, fontWeight: 500 }}> kcal</span></div>
-                    <div className="kpi-sub muted">Until daily target</div>
+                    <div className="kpi-icon">🥩</div>
+                    <div className="kpi-label">Protein</div>
+                    <div className="kpi-value">{totalNutrition.protein}g</div>
+                    <div className="kpi-sub muted">Daily total</div>
                 </div>
                 <div className="kpi accent">
-                    <div className="kpi-icon">▦</div>
-                    <div className="kpi-label">Logged</div>
-                    <div className="kpi-value">{meals.length}</div>
-                    <div className="kpi-sub muted">meals today</div>
+                    <div className="kpi-icon">🍞</div>
+                    <div className="kpi-label">Carbs</div>
+                    <div className="kpi-value">{totalNutrition.carbs}g</div>
+                    <div className="kpi-sub muted">Daily total</div>
+                </div>
+                <div className="kpi accent">
+                    <div className="kpi-icon">🥑</div>
+                    <div className="kpi-label">Fat</div>
+                    <div className="kpi-value">{totalNutrition.fat}g</div>
+                    <div className="kpi-sub muted">Daily total</div>
                 </div>
             </div>
 
@@ -182,6 +320,7 @@ function Meals() {
                 </div>
                 <div className="tabs">
                     <button className={'tab ' + (mode === 'search' ? 'active' : '')} onClick={() => setMode('search')}>🔍 Search API</button>
+                    <button className={'tab ' + (mode === 'barcode' ? 'active' : '')} onClick={() => setMode('barcode')}>📱 Barcode</button>
                     <button className={'tab ' + (mode === 'manual' ? 'active' : '')} onClick={() => setMode('manual')}>✏️ Manual</button>
                     <button className={'tab ' + (mode === 'dish' ? 'active' : '')} onClick={() => setMode('dish')}>🍽️ Build Dish</button>
                 </div>
@@ -201,19 +340,56 @@ function Meals() {
                         {searchResults.length > 0 && (
                             <table className="table mt-md">
                                 <thead>
-                                    <tr><th>Food</th><th>Calories (per 100g)</th><th></th></tr>
+                                    <tr><th>Food</th><th>Brand</th><th>Calories</th><th>Protein</th><th>Carbs</th><th>Fat</th><th></th></tr>
                                 </thead>
                                 <tbody>
                                     {searchResults.map((r, i) => (
                                         <tr key={i}>
                                             <td style={{ color: 'var(--text-0)', fontWeight: 500 }}>{r.name}</td>
+                                            <td className="muted">{r.brand || '-'}</td>
                                             <td className="muted">{r.calories} kcal</td>
+                                            <td className="muted">{r.protein || '-'}g</td>
+                                            <td className="muted">{r.carbs || '-'}g</td>
+                                            <td className="muted">{r.fat || '-'}g</td>
                                             <td><button className="btn primary sm" onClick={() => addMealFromSearch(r)}>+ Add</button></td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         )}
+
+                        {selectedProduct && (
+                            <div className="card mt-md" style={{ background: 'var(--bg-2)', padding: 16 }}>
+                                <div className="card-title mb-sm">{selectedProduct.name}</div>
+                                {selectedProduct.brand && <div className="muted mb-sm">Brand: {selectedProduct.brand}</div>}
+                                <div className="grid grid-4">
+                                    <div><strong>Calories:</strong> {selectedProduct.calories} kcal</div>
+                                    <div><strong>Protein:</strong> {selectedProduct.protein || '-'}g</div>
+                                    <div><strong>Carbs:</strong> {selectedProduct.carbs || '-'}g</div>
+                                    <div><strong>Fat:</strong> {selectedProduct.fat || '-'}g</div>
+                                </div>
+                                {selectedProduct.fiber && <div className="muted mt-sm">Fiber: {selectedProduct.fiber}g</div>}
+                                {selectedProduct.sodium && <div className="muted">Sodium: {selectedProduct.sodium}mg</div>}
+                                <button className="btn primary mt-sm" onClick={() => addMealFromSearch(selectedProduct)}>Add to Meals</button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {mode === 'barcode' && (
+                    <div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'end' }}>
+                            <div className="field">
+                                <label>Barcode / EAN</label>
+                                <input className="input" placeholder="Enter barcode or scan..." value={barcodeInput} onChange={e => setBarcodeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchByBarcode(barcodeInput)} />
+                            </div>
+                            <button className="btn primary" onClick={() => searchByBarcode(barcodeInput)} disabled={loadingSearch} style={{ height: 40 }}>
+                                {loadingSearch ? 'Searching...' : '🔍 Lookup'}
+                            </button>
+                        </div>
+                        <div className="muted mt-sm" style={{ fontSize: 12 }}>
+                            Enter a product barcode (EAN-13, UPC, etc.) to fetch nutrition data from OpenFoodFacts database.
+                        </div>
                     </div>
                 )}
 
@@ -226,6 +402,18 @@ function Meals() {
                         <div className="field">
                             <label>Calories</label>
                             <input className="input" type="number" placeholder="kcal" value={manualCalories} onChange={e => setManualCalories(e.target.value)} />
+                        </div>
+                        <div className="field">
+                            <label>Protein (g)</label>
+                            <input className="input" type="number" placeholder="optional" value={manualProtein} onChange={e => setManualProtein(e.target.value)} />
+                        </div>
+                        <div className="field">
+                            <label>Carbs (g)</label>
+                            <input className="input" type="number" placeholder="optional" value={manualCarbs} onChange={e => setManualCarbs(e.target.value)} />
+                        </div>
+                        <div className="field">
+                            <label>Fat (g)</label>
+                            <input className="input" type="number" placeholder="optional" value={manualFat} onChange={e => setManualFat(e.target.value)} />
                         </div>
                         <div className="field">
                             <label>Meal type</label>
@@ -303,7 +491,7 @@ function Meals() {
                     ) : (
                         <table className="table">
                             <thead>
-                                <tr><th>Meal</th><th>Type</th><th>Calories</th><th style={{ width: 50 }}></th></tr>
+                                <tr><th>Meal</th><th>Type</th><th>Calories</th><th>Protein</th><th>Carbs</th><th>Fat</th><th style={{ width: 50 }}></th></tr>
                             </thead>
                             <tbody>
                                 {meals.map(m => (
@@ -311,6 +499,9 @@ function Meals() {
                                         <td style={{ color: 'var(--text-0)', fontWeight: 500 }}>{m.title}</td>
                                         <td><span className="badge" style={{ background: (catColors[m.category] || '#64748b') + '22', color: catColors[m.category] || '#64748b' }}>{m.category || 'snack'}</span></td>
                                         <td className="muted">{m.calories} kcal</td>
+                                        <td className="muted">{m.protein || '-'}g</td>
+                                        <td className="muted">{m.carbs || '-'}g</td>
+                                        <td className="muted">{m.fat || '-'}g</td>
                                         <td><button className="btn ghost sm" onClick={() => removeMeal(m._id)}>✕</button></td>
                                     </tr>
                                 ))}
@@ -348,6 +539,29 @@ function Meals() {
                             </div>
                         ))}
                     </div>
+                </div>
+            </div>
+
+            <div className="card mb-md">
+                <div className="card-header">
+                    <div>
+                        <div className="card-title">Weekly Nutrition Overview</div>
+                        <div className="card-sub">Last 7 days tracking</div>
+                    </div>
+                </div>
+                <div style={{ width: '100%', height: 300 }}>
+                    <ResponsiveContainer>
+                        <BarChart data={last7DaysNutrition}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#232938" />
+                            <XAxis dataKey="day" stroke="#5b6377" tick={{ fontSize: 11 }} />
+                            <YAxis stroke="#5b6377" tick={{ fontSize: 11 }} />
+                            <Tooltip />
+                            <Bar dataKey="calories" fill="#f97316" name="Calories" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="protein" fill="#10b981" name="Protein (g)" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="carbs" fill="#3b82f6" name="Carbs (g)" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="fat" fill="#a855f7" name="Fat (g)" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
         </div>
