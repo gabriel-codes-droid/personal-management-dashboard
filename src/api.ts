@@ -31,6 +31,8 @@ export interface User {
     username: string;
     email: string;
     role: 'user' | 'admin';
+    banned?: boolean;
+    lastLogin?: string;
     createdAt: string;
 }
 
@@ -138,7 +140,12 @@ export const admin = {
     deleteUser: (id: string) => api.delete(`/admin/users/${id}`).then(r => r.data),
     setRole: (id: string, role: 'user' | 'admin') => 
         api.put(`/admin/users/${id}/role`, { role }).then(r => r.data),
+    banUser: (id: string, banned: boolean) => 
+        api.put(`/admin/users/${id}/ban`, { banned }).then(r => r.data),
+    getUserStats: (id: string) => api.get(`/admin/users/${id}/stats`).then(r => r.data),
+    getUserActivity: (id: string) => api.get(`/admin/users/${id}/activity`).then(r => r.data),
     stats: () => api.get<AdminStats>('/admin/stats').then(r => r.data),
+    analytics: () => api.get('/admin/analytics').then(r => r.data),
 };
 
 export default api;
