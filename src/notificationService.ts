@@ -4,6 +4,10 @@ class NotificationService {
     private permission: NotificationPermission = 'default';
     private swRegistration: ServiceWorkerRegistration | null = null;
 
+    get registration(): ServiceWorkerRegistration | null {
+        return this.swRegistration;
+    }
+
     async requestPermission(): Promise<boolean> {
         if (!('Notification' in window)) {
             console.warn('This browser does not support desktop notification');

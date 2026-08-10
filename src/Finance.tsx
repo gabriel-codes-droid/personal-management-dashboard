@@ -40,10 +40,6 @@ const last6Months = (): Array<{ month: string; year: number }> => {
 };
 
 const fmtShortDay = (iso: string) => new Date(iso).toLocaleDateString(undefined, { weekday: 'short' });
-const dayBucket = (date: string) => {
-    const d = new Date(date);
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-};
 
 const catColor = (key: string) => {
     const colors: Record<string, string> = {
@@ -71,7 +67,7 @@ function Finance() {
     const [category, setCategory] = useState('food');
     const [filter, setFilter] = useState('all');
     const [error, setError] = useState('');
-    const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([
+    const [savingsGoals] = useState<SavingsGoal[]>([
         { id: '1', name: 'Emergency Fund', target: 10000, current: 3500, deadline: '2024-12-31' },
         { id: '2', name: 'Vacation', target: 3000, current: 1200, deadline: '2024-06-01' },
     ]);
@@ -281,7 +277,7 @@ function Finance() {
                             <ResponsiveContainer>
                                 <PieChart>
                                     <Pie data={expenseByCat} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={85} paddingAngle={2}>
-                                        {expenseByCat.map((d, i) => <Cell key={i} fill={catColor(CATS.find(c => c.label === d.name)?.key)} />)}
+                                        {expenseByCat.map((d, i) => <Cell key={i} fill={catColor(CATS.find(c => c.label === d.name)?.key ?? '')} />)}
                                     </Pie>
                                     <Tooltip />
                                 </PieChart>

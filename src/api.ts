@@ -75,7 +75,7 @@ export interface Activity {
     description: string;
     startTime: string;
     endTime: string;
-    done: boolean;
+    done?: boolean;
     createdAt: string;
     updatedAt: string;
 }

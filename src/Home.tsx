@@ -24,7 +24,6 @@ const dayBucket = (date: string) => {
     return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 };
 
-const DAY_MS = 86400000;
 
 function Home() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);

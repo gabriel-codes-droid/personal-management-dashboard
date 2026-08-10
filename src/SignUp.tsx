@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, type ChangeEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from './auth';
 import { useTheme } from './theme';
@@ -38,8 +38,8 @@ function Signup() {
         setEmailStatus('checking');
         const t = setTimeout(async () => {
             try {
-                const { exists } = await authApi.checkEmail(trimmed);
-                setEmailStatus(exists ? 'taken' : 'available');
+                const { available } = await authApi.checkEmail(trimmed);
+                setEmailStatus(available ? 'available' : 'taken');
             } catch {
                 setEmailStatus('unknown');
             }
@@ -57,8 +57,8 @@ function Signup() {
         setUsernameStatus('checking');
         const t = setTimeout(async () => {
             try {
-                const { exists } = await authApi.checkUsername(trimmed);
-                setUsernameStatus(exists ? 'taken' : 'available');
+                const { available } = await authApi.checkUsername(trimmed);
+                setUsernameStatus(available ? 'available' : 'taken');
             } catch {
                 setUsernameStatus('unknown');
             }
@@ -91,7 +91,6 @@ function Signup() {
             navigate('/', { replace: true });
         } catch (err: any) {
             // Surface the backend's reason. axios error shape: err.response.data.message
-            const status = err.response?.status;
             const serverMsg = err.response?.data?.message;
             const reason = serverMsg || err.message || 'Signup failed. Please try again.';
             setError(reason);
@@ -119,7 +118,7 @@ function Signup() {
     };
 
     // Reject digits from being typed into the username field at all.
-    const onUsernameChange = (e) => {
+    const onUsernameChange = (e: ChangeEvent<HTMLInputElement>) => {
         const filtered = e.target.value.replace(/[0-9]/g, '');
         setUsername(filtered);
         if (fieldErrors.username) setFieldErrors(f => ({ ...f, username: '' }));

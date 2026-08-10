@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { activities as actApi, Activity } from './api';
+import { activities as actApi, type Activity } from './api';
 
 function Activity() {
     const [mode, setMode] = useState<'schedule' | 'countdown'>('schedule');
@@ -14,7 +14,7 @@ function Activity() {
     const [time, setTime] = useState(0);
     const [isRunning, setIsRunning] = useState(false);
     const [finished, setFinished] = useState(false);
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
     const [now, setNow] = useState(new Date());
 
     const reload = async () => {
@@ -57,18 +57,18 @@ function Activity() {
         return () => clearInterval(intervalRef.current);
     }, [isRunning]);
 
-    const formatTime = (s) => {
+    const formatTime = (s: number) => {
         const h = Math.floor(s / 3600);
         const m = Math.floor((s % 3600) / 60);
         const sec = s % 60;
         return [h, m, sec].map(n => String(n).padStart(2, '0')).join(':');
     };
 
-    const getStatus = (a) => {
+    const getStatus = (a: Activity) => {
         const start = new Date(a.startTime);
         const end = new Date(a.endTime);
-        const toStart = Math.floor((start - now) / 1000);
-        const toEnd = Math.floor((end - now) / 1000);
+        const toStart = Math.floor((start.getTime() - now.getTime()) / 1000);
+        const toEnd = Math.floor((end.getTime() - now.getTime()) / 1000);
         if (a.done) return { label: 'Done', color: 'success' };
         if (now < start) return { label: `Starts in ${formatTime(toStart)}`, color: 'info' };
         if (now >= start && now < end) return { label: `Ongoing · ${formatTime(toEnd)} left`, color: 'success' };
@@ -89,12 +89,12 @@ function Activity() {
             await actApi.create({ title: title.trim(), description: description.trim(), startTime, endTime });
             setTitle(''); setDescription(''); setStartTime(''); setEndTime('');
             await reload();
-        } catch (e) {
+        } catch (e: any) {
             setError(e.response?.data?.message || 'Failed to add activity.');
         }
     };
 
-    const markDone = async (id) => {
+    const markDone = async (id: string) => {
         try {
             await actApi.update(id, { done: true });
             await reload();
@@ -103,7 +103,7 @@ function Activity() {
         }
     };
 
-    const removeActivity = async (id) => {
+    const removeActivity = async (id: string) => {
         try {
             await actApi.remove(id);
             await reload();
@@ -124,7 +124,7 @@ function Activity() {
     const ongoing = activities.filter(a => !a.done && now >= new Date(a.startTime) && now < new Date(a.endTime));
     const done = activities.filter(a => a.done);
 
-    const renderCard = (a) => {
+    const renderCard = (a: Activity) => {
         const s = getStatus(a);
         return (
             <div key={a._id} className="activity-card">

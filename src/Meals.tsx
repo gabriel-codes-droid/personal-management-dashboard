@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { meals as mealApi, Meal } from './api';
 import {
     PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid
@@ -62,8 +62,6 @@ function Meals() {
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [selectedProduct, setSelectedProduct] = useState<SearchResult | null>(null);
     const [barcodeInput, setBarcodeInput] = useState('');
-    const [scanning, setScanning] = useState(false);
-    const videoRef = useRef<HTMLVideoElement>(null);
 
     const reload = async () => {
         try {
@@ -90,7 +88,7 @@ function Meals() {
             const response = await fetch(
                 `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=8&fields=product_name,nutriments,code,brands`
             );
-            const data = await response.json();
+            const data: { products?: any[] } = await response.json();
             const results = (data.products || [])
                 .filter(p => p.product_name && p.nutriments?.['energy-kcal_100g'])
                 .slice(0, 8)
@@ -178,7 +176,7 @@ function Meals() {
             await mealApi.create({ 
                 title: manualTitle.trim(), 
                 calories: Number(manualCalories), 
-                category: manualCategory, 
+                category: manualCategory as 'breakfast' | 'lunch' | 'dinner' | 'snack', 
                 source: 'manual',
                 protein: manualProtein ? Number(manualProtein) : undefined,
                 carbs: manualCarbs ? Number(manualCarbs) : undefined,
@@ -224,7 +222,7 @@ function Meals() {
         }
     };
 
-    const removeMeal = async (id) => {
+    const removeMeal = async (id: string) => {
         try {
             await mealApi.remove(id);
             await reload();
@@ -234,7 +232,6 @@ function Meals() {
     };
 
     const totalCalories = meals.reduce((s, m) => s + Number(m.calories), 0);
-    const remaining = Math.max(0, DAILY_TARGET - totalCalories);
     const pct = Math.min(100, (totalCalories / DAILY_TARGET) * 100);
 
     // Calculate total nutrition
