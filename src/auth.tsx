@@ -27,8 +27,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Validate token on mount
     useEffect(() => {
         let cancelled = false;
+        // Safety timeout: never show loading spinner longer than 4s
+        const maxLoad = setTimeout(() => { if (!cancelled) setLoading(false); }, 4000);
         (async () => {
             if (!token) {
+                clearTimeout(maxLoad);
                 setLoading(false);
                 return;
             }
@@ -43,10 +46,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     localStorage.removeItem('pmd_user');
                 }
             } finally {
+                clearTimeout(maxLoad);
                 if (!cancelled) setLoading(false);
             }
         })();
-        return () => { cancelled = true; };
+        return () => { cancelled = true; clearTimeout(maxLoad); };
     }, [token]);
 
     const login = useCallback(async (email: string, password: string) => {
