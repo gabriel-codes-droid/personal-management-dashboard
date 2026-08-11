@@ -89,6 +89,9 @@ html[data-theme="light"] body {
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
+  .app {
+    position: relative;
+  }
   .sidebar {
     position: fixed;
     left: -100%;
@@ -99,20 +102,24 @@ html[data-theme="light"] body {
     transition: left 0.3s ease;
   }
   
-  .sidebar.open {
-    left: 0;
+  .sidebar.collapsed {
+    left: -100%;
   }
   
-  .main {
-    margin-left: 0 !important;
+  .sidebar:not(.collapsed) {
+    left: 0;
   }
   
   .topbar {
     padding: 0 16px;
   }
   
-  .mobile-menu-btn {
-    display: block !important;
+  .sidebar-toggle {
+    display: inline-flex !important;
+  }
+
+  .sidebar-backdrop {
+    display: block;
   }
   
   .grid-4, .grid-3, .grid-2-1, .grid-2 {
@@ -243,8 +250,7 @@ a {
    ========================================================================== */
 
 .app {
-  display: grid;
-  grid-template-columns: 240px 1fr;
+  display: flex;
   min-height: 100vh;
   background: var(--bg-0);
 }
@@ -260,6 +266,36 @@ a {
   position: sticky;
   top: 0;
   height: 100vh;
+  width: 240px;
+  flex-shrink: 0;
+  transition: width 0.3s ease, padding 0.3s ease, border 0.3s ease;
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 0;
+  padding: 0;
+  border: none;
+}
+
+.sidebar.collapsed .sidebar-brand,
+.sidebar.collapsed .sidebar-label,
+.sidebar.collapsed .sidebar-footer {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.sidebar.collapsed .nav-link span:not(.icon) {
+  display: none;
+}
+
+.sidebar.collapsed .nav-link {
+  justify-content: center;
+  padding: 9px 0;
+}
+
+.sidebar.collapsed .badge {
+  display: none;
 }
 
 .sidebar-brand {
@@ -366,6 +402,7 @@ a {
 .main {
   display: flex;
   flex-direction: column;
+  flex: 1;
   min-width: 0;
 }
 
@@ -524,16 +561,16 @@ a {
 
 @media (max-width: 760px) {
   .grid-4 { grid-template-columns: 1fr; }
-  .app { grid-template-columns: 1fr; }
-  .sidebar { 
-    position: relative; 
-    height: auto;
-    display: none;
+  .sidebar-toggle {
+    display: inline-flex !important;
+  }
+
+  .sidebar-backdrop {
+    display: block;
   }
   .page { padding: 16px; }
   .topbar { padding: 0 16px; }
   .topbar h1 { font-size: 16px; }
-  .mobile-menu-btn { display: inline-flex !important; }
 }
 
 @media (max-width: 480px) {
@@ -544,6 +581,24 @@ a {
   .card { padding: 16px; }
   .kpi { padding: 16px; }
 }
+
+/* Sidebar toggle button */
+.sidebar-toggle {
+  padding: 6px 10px !important;
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Mobile sidebar backdrop */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 99;
+}
+
+
 
 /* Buttons */
 .btn {

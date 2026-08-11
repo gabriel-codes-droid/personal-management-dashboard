@@ -1,5 +1,5 @@
 // Service Worker for Push Notifications
-const CACHE_NAME = 'pmd-v1';
+const CACHE_NAME = 'pmd-v2';
 const urlsToCache = [
     '/',
     '/index.html',

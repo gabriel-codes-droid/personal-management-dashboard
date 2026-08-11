@@ -148,4 +148,11 @@ export const admin = {
     analytics: () => api.get('/admin/analytics').then(r => r.data),
 };
 
+export const analytics = {
+    trackEvent: (data: { eventType: string; page?: string; action?: string; metadata?: any }) => 
+        api.post('/analytics/track', data).then(r => r.data),
+    getMyStats: () => api.get('/analytics/my-stats').then(r => r.data),
+    getDailyActivity: (days?: number) => api.get(`/analytics/daily-activity?days=${days || 7}`).then(r => r.data),
+};
+
 export default api;

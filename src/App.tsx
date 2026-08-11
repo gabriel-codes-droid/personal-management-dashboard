@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './auth';
 import { ThemeProvider, useTheme } from './theme';
@@ -14,7 +14,7 @@ import Login from './Login';
 import Signup from './SignUp';
 import './styles.css';
 
-function Sidebar() {
+function Sidebar({ open }: { open: boolean }) {
     const [notifications, setNotifications] = useState<AppNotification[]>(() =>
         JSON.parse(localStorage.getItem('notifications') || '[]')
     );
@@ -42,7 +42,7 @@ function Sidebar() {
     );
 
     return (
-        <aside className="sidebar">
+        <aside className={"sidebar" + (open ? "" : " collapsed")}>
             <div className="sidebar-brand">
                 <div className="logo">PMD</div>
                 <div className="name">
@@ -75,7 +75,7 @@ function Sidebar() {
     );
 }
 
-function Topbar() {
+function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onToggleSidebar: () => void }) {
     const location = useLocation();
     const { user, logout } = useAuth();
     const { theme, toggle } = useTheme();
@@ -108,13 +108,17 @@ function Topbar() {
 
     return (
         <header className="topbar">
+            {sidebarOpen && (
+                <div onClick={onToggleSidebar} className="sidebar-backdrop" />
+            )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <button 
-                    className="btn ghost mobile-menu-btn" 
-                    onClick={() => setMobileNavOpen(o => !o)}
-                    style={{ display: 'none', padding: '6px 10px' }}
+                <button
+                    className="btn ghost sidebar-toggle"
+                    onClick={onToggleSidebar}
+                    aria-label="Toggle sidebar"
+                    title={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
                 >
-                    ☰
+                    {sidebarOpen ? '◀' : '▶'}
                 </button>
                 <h1>{titles[location.pathname] || 'PMD'}</h1>
             </div>
@@ -191,6 +195,7 @@ function Topbar() {
 
 function ProtectedShell() {
     const { user, loading } = useAuth();
+    const [sidebarOpen, setSidebarOpen] = useState(true);
     if (loading) {
         return (
             <div className="loading-screen">
@@ -201,11 +206,15 @@ function ProtectedShell() {
     }
     if (!user) return <Navigate to="/login" replace />;
 
+    const toggleSidebar = useCallback(() => {
+        setSidebarOpen(o => !o);
+    }, []);
+
     return (
         <div className="app">
-            <Sidebar />
+            <Sidebar open={sidebarOpen} />
             <div className="main">
-                <Topbar />
+                <Topbar sidebarOpen={sidebarOpen} onToggleSidebar={toggleSidebar} />
                 <main className="page">
                     <Routes>
                         <Route path="/" element={<Home />} />
