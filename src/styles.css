@@ -1140,6 +1140,9 @@ a {
 .field-hint.ok {
   color: var(--success, #2ecc71);
 }
+.field-hint.warn {
+  color: var(--warning, #f59e0b);
+}
 
 .input.invalid,
 .select.invalid {

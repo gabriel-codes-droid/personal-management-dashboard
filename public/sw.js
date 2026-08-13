@@ -3,13 +3,16 @@ const CACHE_NAME = 'pmd-v2';
 const urlsToCache = [
     '/',
     '/index.html',
-    '/favicon.ico'
+    '/vite.svg'
 ];
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => cache.addAll(urlsToCache))
+            .catch((err) => {
+                console.error('SW cache install failed:', err);
+            })
     );
 });
 
@@ -28,8 +31,8 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('push', (event) => {
     const options = {
         body: event.data ? event.data.text() : 'New notification',
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
+        icon: '/vite.svg',
+        badge: '/vite.svg',
         vibrate: [100, 50, 100],
         data: {
             dateOfArrival: Date.now(),

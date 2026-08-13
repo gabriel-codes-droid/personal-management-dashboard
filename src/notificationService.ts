@@ -39,8 +39,8 @@ class NotificationService {
     showLocalNotification(title: string, options?: NotificationOptions): void {
         if (this.permission === 'granted') {
             new Notification(title, {
-                icon: '/favicon.ico',
-                badge: '/favicon.ico',
+                icon: '/vite.svg',
+                badge: '/vite.svg',
                 ...options
             });
         }

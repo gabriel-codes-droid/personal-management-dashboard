@@ -12,10 +12,11 @@ function Signup() {
     const { signup } = useAuth();
     const { theme, toggle } = useTheme();
 
-    const [username, setUsername] = useState('');
+    const [usernameRaw, setUsernameRaw] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirm, setConfirm] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
@@ -26,6 +27,11 @@ function Signup() {
 
     const pwStrength: PasswordStrength = passwordStrength(password);
     const confirmMismatch = confirm.length > 0 && password !== confirm;
+
+    // Username: only letters and numbers allowed. Strip anything else,
+    // and show a warning hint when the value contains invalid chars.
+    const hasInvalidChars = usernameRaw.length > 0 && !/^[A-Za-z0-9]+$/.test(usernameRaw);
+    const username = usernameRaw.replace(/[^A-Za-z0-9]/g, '');
 
     // Debounced live check for email availability
     useEffect(() => {
@@ -117,11 +123,9 @@ function Signup() {
         setFieldErrors(f => ({ ...f, confirm: msg }));
     };
 
-    // Reject digits from being typed into the username field at all.
     const onUsernameChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const filtered = e.target.value.replace(/[0-9]/g, '');
-        setUsername(filtered);
-        if (fieldErrors.username) setFieldErrors(f => ({ ...f, username: '' }));
+        setUsernameRaw(e.target.value);
+        setFieldErrors(f => ({ ...f, username: '' }));
     };
 
     return (
@@ -153,8 +157,8 @@ function Signup() {
                         <input
                             className={'input' + (fieldErrors.username || usernameStatus === 'taken' ? ' invalid' : '')}
                             type="text"
-                            placeholder="Letters, spaces, hyphens, underscores only"
-                            value={username}
+                            placeholder="Letters and numbers only"
+                            value={usernameRaw}
                             onChange={onUsernameChange}
                             onBlur={onUsernameBlur}
                             required
@@ -169,7 +173,9 @@ function Signup() {
                                     ? <div className="field-hint ok">✓ Username is available</div>
                                     : usernameStatus === 'checking'
                                         ? <div className="field-hint">Checking…</div>
-                                        : <div className="pw-hints">No numbers. Letters, spaces, hyphens, underscores, apostrophes only.</div>
+                                        : hasInvalidChars
+                                            ? <div className="field-hint warn">⚠ Only letters and numbers allowed.</div>
+                                            : null
                         }
                     </div>
                     <div className="field mb-md">
@@ -197,16 +203,27 @@ function Signup() {
                     </div>
                     <div className="field mb-md">
                         <label>Password</label>
-                        <input
-                            className={'input' + (fieldErrors.password ? ' invalid' : '')}
-                            type="password"
-                            placeholder="At least 6 characters"
-                            value={password}
-                            onChange={e => { setPassword(e.target.value); if (fieldErrors.password) setFieldErrors(f => ({ ...f, password: '' })); }}
-                            onBlur={onPasswordBlur}
-                            required
-                            autoComplete="new-password"
-                        />
+                        <div className="input-wrap">
+                            <input
+                                className={'input' + (fieldErrors.password ? ' invalid' : '')}
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="At least 6 characters"
+                                value={password}
+                                onChange={e => { setPassword(e.target.value); if (fieldErrors.password) setFieldErrors(f => ({ ...f, password: '' })); }}
+                                onBlur={onPasswordBlur}
+                                required
+                                autoComplete="new-password"
+                            />
+                            <button
+                                type="button"
+                                className="input-suffix"
+                                onClick={() => setShowPassword(s => !s)}
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                title={showPassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showPassword ? '🙈' : '👁'}
+                            </button>
+                        </div>
                         <div className="pw-strength" data-score={pwStrength.score}>
                             <div className="pw-bars">
                                 <span></span><span></span><span></span><span></span>
@@ -220,16 +237,27 @@ function Signup() {
                     </div>
                     <div className="field mb-md">
                         <label>Confirm password</label>
-                        <input
-                            className={'input' + ((fieldErrors.confirm || confirmMismatch) ? ' invalid' : '')}
-                            type="password"
-                            placeholder="Repeat your password"
-                            value={confirm}
-                            onChange={e => { setConfirm(e.target.value); if (fieldErrors.confirm) setFieldErrors(f => ({ ...f, confirm: '' })); }}
-                            onBlur={onConfirmBlur}
-                            required
-                            autoComplete="new-password"
-                        />
+                        <div className="input-wrap">
+                            <input
+                                className={'input' + ((fieldErrors.confirm || confirmMismatch) ? ' invalid' : '')}
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="Repeat your password"
+                                value={confirm}
+                                onChange={e => { setConfirm(e.target.value); if (fieldErrors.confirm) setFieldErrors(f => ({ ...f, confirm: '' })); }}
+                                onBlur={onConfirmBlur}
+                                required
+                                autoComplete="new-password"
+                            />
+                            <button
+                                type="button"
+                                className="input-suffix"
+                                onClick={() => setShowPassword(s => !s)}
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                title={showPassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showPassword ? '🙈' : '👁'}
+                            </button>
+                        </div>
                         {fieldErrors.confirm && <div className="field-error">⚠ {fieldErrors.confirm}</div>}
                     </div>
                     <button type="submit" className="btn primary auth-submit" disabled={loading}>

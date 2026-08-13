@@ -4,9 +4,9 @@
 // Email: simple, pragmatic — local@domain.tld with at least one dot in the domain.
 const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
-// Username: letters, spaces, hyphens, underscores, apostrophes. No digits, no symbols.
-// Min 2 chars, max 32. Must start with a letter.
-const USERNAME_RE = /^[A-Za-z][A-Za-z\s\-_']{1,31}$/;
+// Username: letters and numbers only. No spaces, no symbols, no hyphens.
+// Min 2 chars, max 32.
+const USERNAME_RE = /^[A-Za-z0-9]{2,32}$/;
 
 export interface PasswordStrength {
     score: number;
@@ -18,8 +18,7 @@ export function validateUsername(value: string): string {
     const v = (value || '').trim();
     if (v.length === 0) return 'Username is required.';
     if (v.length < 2) return 'Username must be at least 2 characters.';
-    if (/\d/.test(v)) return 'Username cannot contain numbers.';
-    if (!USERNAME_RE.test(v)) return 'Username can only contain letters, spaces, hyphens, underscores, and apostrophes.';
+    if (!USERNAME_RE.test(v)) return 'Username can only contain letters and numbers.';
     return '';
 }
 
