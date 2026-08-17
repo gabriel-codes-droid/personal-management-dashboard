@@ -10,6 +10,7 @@ import Activity from './Activity';
 import Notifications from './Notifications';
 import Trash from './Trash';
 import Admin from './Admin';
+import Settings from './Settings';
 import Login from './Login';
 import Signup from './SignUp';
 import './styles.css';
@@ -52,23 +53,24 @@ function Sidebar({ open }: { open: boolean }) {
             </div>
 
             <div className="sidebar-label">Overview</div>
-            {link('/', '◐', 'Dashboard')}
+            {link('/', '📊', 'Dashboard')}
 
             <div className="sidebar-label">Modules</div>
-            {link('/finance', '◆', 'Finance')}
-            {link('/meals', '◉', 'Meals')}
-            {link('/activity', '▣', 'Activity')}
+            {link('/finance', '💰', 'Finance')}
+            {link('/meals', '🍽️', 'Meals')}
+            {link('/activity', '🏃', 'Activity')}
 
             {user?.role === 'admin' && (
                 <>
                     <div className="sidebar-label">Admin</div>
-                    {link('/admin', '⚙', 'Admin Panel')}
+                    {link('/admin', '🔧', 'Admin Panel')}
                 </>
             )}
 
             <div className="sidebar-label">System</div>
-            {link('/notifications', '◔', 'Notifications', unread)}
-            {link('/trash', '◌', 'Trash')}
+            {link('/notifications', '🔔', 'Notifications', unread)}
+            {link('/trash', '🗑️', 'Trash')}
+            {link('/settings', '⚙️', 'Settings')}
 
             <div className="sidebar-footer">v1.0 · Synced to backend</div>
         </aside>
@@ -91,6 +93,7 @@ function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
         '/admin': 'Admin',
         '/notifications': 'Notifications',
         '/trash': 'Trash',
+        '/settings': 'Settings',
     };
 
     const today = new Date().toLocaleDateString(undefined, {
@@ -129,7 +132,11 @@ function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
                 </button>
                 <div style={{ position: 'relative' }}>
                     <div className="avatar" onClick={() => setMenuOpen(o => !o)} style={{ cursor: 'pointer' }} title={user?.email}>
-                        {initial}
+                        {user?.profileImage ? (
+                            <img src={user.profileImage} alt="Profile" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                        ) : (
+                            initial
+                        )}
                     </div>
                     {menuOpen && (
                         <>
@@ -154,7 +161,7 @@ function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
                                     <div style={{ fontSize: 11, color: 'var(--text-2)', marginTop: 2 }}>{user?.email}</div>
                                 </div>
                                 <button className="btn ghost" onClick={onLogout} style={{ width: '100%', justifyContent: 'flex-start' }}>
-                                    ↪ Sign out
+                                    🚪 Sign out
                                 </button>
                             </div>
                         </>
@@ -176,15 +183,16 @@ function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
                         overflowY: 'auto',
                     }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            <NavLink to="/" className="nav-link" onClick={() => setMobileNavOpen(false)}>◐ Dashboard</NavLink>
-                            <NavLink to="/finance" className="nav-link" onClick={() => setMobileNavOpen(false)}>◆ Finance</NavLink>
-                            <NavLink to="/meals" className="nav-link" onClick={() => setMobileNavOpen(false)}>◉ Meals</NavLink>
-                            <NavLink to="/activity" className="nav-link" onClick={() => setMobileNavOpen(false)}>▣ Activity</NavLink>
+                            <NavLink to="/" className="nav-link" onClick={() => setMobileNavOpen(false)}>📊 Dashboard</NavLink>
+                            <NavLink to="/finance" className="nav-link" onClick={() => setMobileNavOpen(false)}>💰 Finance</NavLink>
+                            <NavLink to="/meals" className="nav-link" onClick={() => setMobileNavOpen(false)}>🍽️ Meals</NavLink>
+                            <NavLink to="/activity" className="nav-link" onClick={() => setMobileNavOpen(false)}>🏃 Activity</NavLink>
                             {user?.role === 'admin' && (
-                                <NavLink to="/admin" className="nav-link" onClick={() => setMobileNavOpen(false)}>⚙ Admin</NavLink>
+                                <NavLink to="/admin" className="nav-link" onClick={() => setMobileNavOpen(false)}>🔧 Admin</NavLink>
                             )}
-                            <NavLink to="/notifications" className="nav-link" onClick={() => setMobileNavOpen(false)}>◔ Notifications</NavLink>
-                            <NavLink to="/trash" className="nav-link" onClick={() => setMobileNavOpen(false)}>◌ Trash</NavLink>
+                            <NavLink to="/notifications" className="nav-link" onClick={() => setMobileNavOpen(false)}>🔔 Notifications</NavLink>
+                            <NavLink to="/trash" className="nav-link" onClick={() => setMobileNavOpen(false)}>🗑️ Trash</NavLink>
+                            <NavLink to="/settings" className="nav-link" onClick={() => setMobileNavOpen(false)}>⚙️ Settings</NavLink>
                         </div>
                     </div>
                 </>
@@ -224,6 +232,7 @@ function ProtectedShell() {
                         <Route path="/activity" element={<Activity />} />
                         <Route path="/notifications" element={<Notifications />} />
                         <Route path="/trash" element={<Trash />} />
+                        <Route path="/settings" element={<Settings />} />
                         <Route path="/admin" element={
                             user.role === 'admin' ? <Admin /> : <Navigate to="/" replace />
                         } />

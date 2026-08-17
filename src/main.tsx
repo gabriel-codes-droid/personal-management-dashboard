@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App'
 
+console.log('Main.tsx loading...');
+
 // Register service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -17,10 +19,15 @@ if ('serviceWorker' in navigator) {
 }
 
 const container = document.getElementById('root');
+console.log('Root element:', container);
+
 if (container) {
+  console.log('Rendering App...');
   createRoot(container).render(
     <StrictMode>
       <App />
     </StrictMode>,
   );
+} else {
+  console.error('Root element not found!');
 }

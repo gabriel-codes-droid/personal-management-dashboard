@@ -38,7 +38,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             try {
                 const { user: fresh } = await authApi.me();
                 if (!cancelled) setUser(fresh);
-            } catch {
+            } catch (error) {
+                console.error('Auth validation failed:', error);
                 if (!cancelled) {
                     setUser(null);
                     setToken(null);

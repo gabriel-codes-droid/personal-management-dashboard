@@ -42,6 +42,7 @@ export interface User {
     banned?: boolean;
     lastLogin?: string;
     createdAt: string;
+    profileImage?: string;
 }
 
 export interface AuthResponse {
@@ -132,6 +133,16 @@ export const auth = {
         api.get<{ available: boolean }>('/auth/check-email', { params: { email } }).then(r => r.data),
     checkUsername: (username: string) => 
         api.get<{ available: boolean }>('/auth/check-username', { params: { username } }).then(r => r.data),
+    forgotPassword: (email: string) => 
+        api.post('/auth/forgot-password', { email }).then(r => r.data),
+    verifyResetCode: (email: string, code: string) => 
+        api.post('/auth/verify-reset-code', { email, code }).then(r => r.data),
+    resetPassword: (email: string, code: string, newPassword: string) => 
+        api.post('/auth/reset-password', { email, code, newPassword }).then(r => r.data),
+    updateProfileImage: (profileImage: string) => 
+        api.put<{ user: User }>('/auth/profile-image', { profileImage }).then(r => r.data),
+    changePassword: (currentPassword: string, newPassword: string) => 
+        api.put('/auth/change-password', { currentPassword, newPassword }).then(r => r.data),
 };
 
 export const meals = {
