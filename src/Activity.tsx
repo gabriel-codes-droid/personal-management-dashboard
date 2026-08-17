@@ -21,7 +21,7 @@ function Activity() {
         try {
             const data = await actApi.list();
             setActivities(data);
-        } catch (e) {
+        } catch {
             setError('Failed to load activities.');
         }
     };
@@ -98,7 +98,7 @@ function Activity() {
         try {
             await actApi.update(id, { done: true });
             await reload();
-        } catch (e) {
+        } catch {
             setError('Failed to update activity.');
         }
     };
@@ -107,7 +107,7 @@ function Activity() {
         try {
             await actApi.remove(id);
             await reload();
-        } catch (e) {
+        } catch {
             setError('Failed to delete activity.');
         }
     };

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { transactions as txApi, Transaction } from './api';
+import { transactions as txApi, Transaction, savingsGoals as goalsApi, SavingsGoal } from './api';
 import {
     AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, CartesianGrid, BarChart, Bar, LineChart, Line
@@ -50,16 +50,14 @@ const catColor = (key: string) => {
     return colors[key] || '#64748b';
 };
 
-interface SavingsGoal {
-    id: string;
-    name: string;
-    target: number;
-    current: number;
-    deadline: string;
-}
-
 function Finance() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [goals, setGoals] = useState<SavingsGoal[]>([]);
+    const [goalName, setGoalName] = useState('');
+    const [goalTarget, setGoalTarget] = useState('');
+    const [goalDeadline, setGoalDeadline] = useState('');
+    const [goalError, setGoalError] = useState('');
+    const [fundInputs, setFundInputs] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
     const [description, setDescription] = useState('');
     const [amount, setAmount] = useState('');
@@ -67,27 +65,70 @@ function Finance() {
     const [category, setCategory] = useState('food');
     const [filter, setFilter] = useState('all');
     const [error, setError] = useState('');
-    const [savingsGoals] = useState<SavingsGoal[]>([
-        { id: '1', name: 'Emergency Fund', target: 10000, current: 3500, deadline: '2024-12-31' },
-        { id: '2', name: 'Vacation', target: 3000, current: 1200, deadline: '2024-06-01' },
-    ]);
-    const [showGoals, setShowGoals] = useState(false);
 
     const reload = async () => {
         try {
             const data = await txApi.list();
             setTransactions(data);
-        } catch (e) {
+        } catch {
             setError('Failed to load transactions.');
+        }
+    };
+
+    const reloadGoals = async () => {
+        try {
+            const data = await goalsApi.list();
+            setGoals(data);
+        } catch {
+            setGoalError('Failed to load savings goals.');
         }
     };
 
     useEffect(() => {
         (async () => {
-            await reload();
+            await Promise.all([reload(), reloadGoals()]);
             setLoading(false);
         })();
     }, []);
+
+    const addGoal = async () => {
+        setGoalError('');
+        if (goalName.trim() === '' || goalTarget === '') return;
+        try {
+            await goalsApi.create({
+                name: goalName.trim(),
+                target: Number(goalTarget),
+                deadline: goalDeadline || undefined,
+            });
+            setGoalName('');
+            setGoalTarget('');
+            setGoalDeadline('');
+            await reloadGoals();
+        } catch {
+            setGoalError('Failed to add savings goal.');
+        }
+    };
+
+    const addFunds = async (goal: SavingsGoal) => {
+        const amt = Number(fundInputs[goal._id]);
+        if (!amt || amt <= 0) return;
+        try {
+            await goalsApi.update(goal._id, { current: goal.current + amt });
+            setFundInputs(prev => ({ ...prev, [goal._id]: '' }));
+            await reloadGoals();
+        } catch {
+            setGoalError('Failed to update savings goal.');
+        }
+    };
+
+    const removeGoal = async (id: string) => {
+        try {
+            await goalsApi.remove(id);
+            await reloadGoals();
+        } catch {
+            setGoalError('Failed to delete savings goal.');
+        }
+    };
 
     const addTransaction = async () => {
         setError('');
@@ -109,7 +150,7 @@ function Finance() {
         try {
             await txApi.remove(id);
             await reload();
-        } catch (e) {
+        } catch {
             setError('Failed to delete transaction.');
         }
     };
@@ -246,7 +287,7 @@ function Finance() {
                         </div>
                     </div>
                     <div style={{ width: '100%', height: 240 }}>
-                        <ResponsiveContainer>
+                        <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={series}>
                                 <defs>
                                     <linearGradient id="finGrad" x1="0" y1="0" x2="0" y2="1">
@@ -274,7 +315,7 @@ function Finance() {
                         {expenseByCat.length === 0 ? (
                             <div className="empty"><div className="empty-icon">○</div>No expenses yet.</div>
                         ) : (
-                            <ResponsiveContainer>
+                            <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie data={expenseByCat} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={85} paddingAngle={2}>
                                         {expenseByCat.map((d, i) => <Cell key={i} fill={catColor(CATS.find(c => c.label === d.name)?.key ?? '')} />)}
@@ -296,7 +337,7 @@ function Finance() {
                         </div>
                     </div>
                     <div style={{ width: '100%', height: 240 }}>
-                        <ResponsiveContainer>
+                        <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={incomeExpenseData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#232938" />
                                 <XAxis dataKey="day" stroke="#5b6377" tick={{ fontSize: 11 }} />
@@ -316,7 +357,7 @@ function Finance() {
                         </div>
                     </div>
                     <div style={{ width: '100%', height: 240 }}>
-                        <ResponsiveContainer>
+                        <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={monthlyData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#232938" />
                                 <XAxis dataKey="month" stroke="#5b6377" tick={{ fontSize: 11 }} />
@@ -337,43 +378,64 @@ function Finance() {
                         <div className="card-title">Savings Goals</div>
                         <div className="card-sub">Track your financial targets</div>
                     </div>
-                    <button className="btn ghost sm" onClick={() => setShowGoals(!showGoals)}>
-                        {showGoals ? 'Hide' : 'Show'}
-                    </button>
                 </div>
-                {showGoals && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginTop: 16 }}>
-                        {savingsGoals.map(goal => {
-                            const progress = Math.min(100, (goal.current / goal.target) * 100);
-                            const remaining = goal.target - goal.current;
-                            const daysLeft = Math.max(0, Math.ceil((new Date(goal.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+                {goalError && <div className="auth-error">{goalError}</div>}
+                <div className="form-row mb-md">
+                    <div className="field">
+                        <label>Goal name</label>
+                        <input className="input" placeholder="e.g. Emergency Fund" value={goalName} onChange={e => setGoalName(e.target.value)} />
+                    </div>
+                    <div className="field">
+                        <label>Target ($)</label>
+                        <input className="input" type="number" placeholder="0.00" value={goalTarget} onChange={e => setGoalTarget(e.target.value)} />
+                    </div>
+                    <div className="field">
+                        <label>Deadline (optional)</label>
+                        <input className="input" type="date" value={goalDeadline} onChange={e => setGoalDeadline(e.target.value)} />
+                    </div>
+                    <div className="field" style={{ justifyContent: 'flex-end' }}>
+                        <label>&nbsp;</label>
+                        <button className="btn primary" onClick={addGoal}>Add Goal</button>
+                    </div>
+                </div>
+                {goals.length === 0 ? (
+                    <div className="empty">
+                        <div className="empty-icon">🎯</div>
+                        No savings goals yet. Add one above to start tracking.
+                    </div>
+                ) : (
+                    <div className="grid grid-3">
+                        {goals.map(g => {
+                            const pct = g.target > 0 ? Math.min(100, (g.current / g.target) * 100) : 0;
+                            const daysLeft = g.deadline
+                                ? Math.max(0, Math.ceil((new Date(g.deadline).getTime() - Date.now()) / 86400000))
+                                : null;
                             return (
-                                <div key={goal.id} style={{ 
-                                    background: 'var(--bg-2)', 
-                                    border: '1px solid var(--border)', 
-                                    borderRadius: 'var(--r-md)', 
-                                    padding: 16 
-                                }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                                        <div style={{ fontWeight: 600, fontSize: 14 }}>{goal.name}</div>
-                                        <div style={{ fontSize: 12, color: 'var(--text-2)' }}>{daysLeft} days left</div>
+                                <div key={g._id} className="card" style={{ background: 'var(--surface-1)' }}>
+                                    <div className="card-header">
+                                        <div className="card-title" style={{ fontSize: 15 }}>{g.name}</div>
+                                        <button className="btn ghost sm" onClick={() => removeGoal(g._id)}>✕</button>
                                     </div>
-                                    <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--success)', marginBottom: 4 }}>
-                                        ${goal.current.toLocaleString()}
+                                    <div className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
+                                        ${g.current.toFixed(2)} of ${g.target.toFixed(2)}
+                                        {daysLeft !== null && ` · ${daysLeft} day${daysLeft === 1 ? '' : 's'} left`}
                                     </div>
-                                    <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 12 }}>
-                                        of ${goal.target.toLocaleString()} goal (${remaining.toLocaleString()} remaining)
+                                    <div style={{ height: 8, borderRadius: 4, background: 'var(--surface-2, #1e2433)', overflow: 'hidden', marginBottom: 12 }}>
+                                        <div style={{ height: '100%', width: `${pct}%`, background: 'var(--success)', transition: 'width 0.3s' }} />
                                     </div>
-                                    <div style={{ height: 8, background: 'var(--bg-1)', borderRadius: 4, overflow: 'hidden' }}>
-                                        <div style={{ 
-                                            height: '100%', 
-                                            width: `${progress}%`, 
-                                            background: progress >= 100 ? 'var(--success)' : 'var(--finance)',
-                                            transition: 'width 0.3s ease'
-                                        }} />
-                                    </div>
-                                    <div style={{ fontSize: 11, color: 'var(--text-2)', marginTop: 4, textAlign: 'right' }}>
-                                        {progress.toFixed(1)}% complete
+                                    <div className="form-row">
+                                        <div className="field">
+                                            <input
+                                                className="input"
+                                                type="number"
+                                                placeholder="Add funds"
+                                                value={fundInputs[g._id] || ''}
+                                                onChange={e => setFundInputs(prev => ({ ...prev, [g._id]: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div className="field" style={{ justifyContent: 'flex-end' }}>
+                                            <button className="btn ghost" onClick={() => addFunds(g)}>Add</button>
+                                        </div>
                                     </div>
                                 </div>
                             );

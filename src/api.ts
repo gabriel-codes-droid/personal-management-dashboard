@@ -16,10 +16,18 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
     res => res,
     err => {
-        if (err.response?.status === 401) {
-            // token invalid/expired — clear and let route guard redirect
+        // 401 = expired/invalid token, 403 = banned mid-session (authRequired
+        // rejects every request for a banned user) — both mean "kick to login".
+        // A hard redirect (not just clearing storage) is needed here because
+        // this interceptor runs outside the AuthContext component tree, so it
+        // has no way to update the React `user`/`token` state directly —
+        // without this, the UI would keep silently re-erroring forever.
+        if (err.response?.status === 401 || err.response?.status === 403) {
             localStorage.removeItem('pmd_token');
             localStorage.removeItem('pmd_user');
+            if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(err);
     }
@@ -95,6 +103,24 @@ export interface AdminStats {
     totalActivities: number;
 }
 
+export interface SavingsGoal {
+    _id: string;
+    name: string;
+    target: number;
+    current: number;
+    deadline?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface TrashItem {
+    id: string;
+    itemType: 'transaction' | 'meal' | 'activity';
+    title: string;
+    details?: string;
+    deletedAt: string;
+}
+
 // API Methods
 export const auth = {
     signup: (data: { username: string; email: string; password: string }) => 
@@ -133,6 +159,24 @@ export const activities = {
     update: (id: string, data: Partial<Activity>) => 
         api.put<Activity>(`/activities/${id}`, data).then(r => r.data),
     remove: (id: string) => api.delete(`/activities/${id}`).then(r => r.data),
+};
+
+export const savingsGoals = {
+    list: () => api.get<SavingsGoal[]>('/savings').then(r => r.data),
+    create: (data: { name: string; target: number; current?: number; deadline?: string }) =>
+        api.post<SavingsGoal>('/savings', data).then(r => r.data),
+    update: (id: string, data: Partial<{ name: string; target: number; current: number; deadline: string }>) =>
+        api.put<SavingsGoal>(`/savings/${id}`, data).then(r => r.data),
+    remove: (id: string) => api.delete(`/savings/${id}`).then(r => r.data),
+};
+
+export const trash = {
+    list: () => api.get<TrashItem[]>('/trash').then(r => r.data),
+    restore: (type: TrashItem['itemType'], id: string) =>
+        api.post(`/trash/${type}/${id}/restore`).then(r => r.data),
+    remove: (type: TrashItem['itemType'], id: string) =>
+        api.delete(`/trash/${type}/${id}`).then(r => r.data),
+    empty: () => api.delete('/trash').then(r => r.data),
 };
 
 export const admin = {

@@ -54,6 +54,7 @@ function Meals() {
     const [manualFat, setManualFat] = useState('');
     const [manualCategory, setManualCategory] = useState('lunch');
     const [dishName, setDishName] = useState('');
+    const [dishCategory, setDishCategory] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('dinner');
     const [ingredientName, setIngredientName] = useState('');
     const [ingredientCalories, setIngredientCalories] = useState('');
     const [ingredientProtein, setIngredientProtein] = useState('');
@@ -67,7 +68,7 @@ function Meals() {
         try {
             const data = await mealApi.list();
             setMeals(data);
-        } catch (e) {
+        } catch {
             setError('Failed to load meals.');
         }
     };
@@ -165,7 +166,7 @@ function Meals() {
             setQuery('');
             setSelectedProduct(null);
             await reload();
-        } catch (e) {
+        } catch {
             setError('Failed to add meal.');
         }
     };
@@ -188,7 +189,7 @@ function Meals() {
             setManualCarbs('');
             setManualFat('');
             await reload();
-        } catch (e) {
+        } catch {
             setError('Failed to add meal.');
         }
     };
@@ -212,12 +213,25 @@ function Meals() {
     const addDish = async () => {
         if (dishName.trim() === '' || ingredients.length === 0) return;
         const totalCals = ingredients.reduce((sum, ing) => sum + ing.calories, 0);
+        // Aggregate each ingredient's macros — previously these were captured
+        // from the form but silently dropped when the dish was saved.
+        const totalProtein = ingredients.reduce((sum, ing) => sum + (ing.protein || 0), 0);
+        const totalCarbs = ingredients.reduce((sum, ing) => sum + (ing.carbs || 0), 0);
+        const totalFat = ingredients.reduce((sum, ing) => sum + (ing.fat || 0), 0);
         try {
-            await mealApi.create({ title: dishName.trim(), calories: totalCals, category: 'dinner', source: 'dish' });
+            await mealApi.create({
+                title: dishName.trim(),
+                calories: totalCals,
+                category: dishCategory,
+                source: 'dish',
+                protein: totalProtein || undefined,
+                carbs: totalCarbs || undefined,
+                fat: totalFat || undefined,
+            });
             setDishName('');
             setIngredients([]);
             await reload();
-        } catch (e) {
+        } catch {
             setError('Failed to add dish.');
         }
     };
@@ -226,7 +240,7 @@ function Meals() {
         try {
             await mealApi.remove(id);
             await reload();
-        } catch (e) {
+        } catch {
             setError('Failed to delete meal.');
         }
     };
@@ -431,9 +445,18 @@ function Meals() {
                 {mode === 'dish' && (
                     <div>
                         <div className="form-row">
-                            <div className="field" style={{ gridColumn: 'span 3' }}>
+                            <div className="field" style={{ gridColumn: 'span 2' }}>
                                 <label>Dish name</label>
                                 <input className="input" placeholder="e.g. Chicken Stew" value={dishName} onChange={e => setDishName(e.target.value)} />
+                            </div>
+                            <div className="field">
+                                <label>Meal type</label>
+                                <select className="select" value={dishCategory} onChange={e => setDishCategory(e.target.value as 'breakfast' | 'lunch' | 'dinner' | 'snack')}>
+                                    <option value="breakfast">🌅 Breakfast</option>
+                                    <option value="lunch">☀️ Lunch</option>
+                                    <option value="dinner">🌙 Dinner</option>
+                                    <option value="snack">🍪 Snack</option>
+                                </select>
                             </div>
                         </div>
                         <div className="form-row">
@@ -444,6 +467,18 @@ function Meals() {
                             <div className="field">
                                 <label>Calories</label>
                                 <input className="input" type="number" placeholder="kcal" value={ingredientCalories} onChange={e => setIngredientCalories(e.target.value)} />
+                            </div>
+                            <div className="field">
+                                <label>Protein (g)</label>
+                                <input className="input" type="number" placeholder="optional" value={ingredientProtein} onChange={e => setIngredientProtein(e.target.value)} />
+                            </div>
+                            <div className="field">
+                                <label>Carbs (g)</label>
+                                <input className="input" type="number" placeholder="optional" value={ingredientCarbs} onChange={e => setIngredientCarbs(e.target.value)} />
+                            </div>
+                            <div className="field">
+                                <label>Fat (g)</label>
+                                <input className="input" type="number" placeholder="optional" value={ingredientFat} onChange={e => setIngredientFat(e.target.value)} />
                             </div>
                             <div className="field" style={{ justifyContent: 'flex-end' }}>
                                 <label>&nbsp;</label>
@@ -518,7 +553,7 @@ function Meals() {
                         {catData.length === 0 ? (
                             <div className="empty"><div className="empty-icon">○</div>No data yet.</div>
                         ) : (
-                            <ResponsiveContainer>
+                            <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie data={catData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={90} paddingAngle={3}>
                                         {catData.map((d, i) => <Cell key={i} fill={catColors[d.name.toLowerCase()]} />)}
@@ -547,7 +582,7 @@ function Meals() {
                     </div>
                 </div>
                 <div style={{ width: '100%', height: 300 }}>
-                    <ResponsiveContainer>
+                    <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={last7DaysNutrition}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#232938" />
                             <XAxis dataKey="day" stroke="#5b6377" tick={{ fontSize: 11 }} />

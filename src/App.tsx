@@ -196,6 +196,11 @@ function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
 function ProtectedShell() {
     const { user, loading } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(true);
+
+    const toggleSidebar = useCallback(() => {
+        setSidebarOpen(o => !o);
+    }, []);
+
     if (loading) {
         return (
             <div className="loading-screen">
@@ -205,10 +210,6 @@ function ProtectedShell() {
         );
     }
     if (!user) return <Navigate to="/login" replace />;
-
-    const toggleSidebar = useCallback(() => {
-        setSidebarOpen(o => !o);
-    }, []);
 
     return (
         <div className="app">

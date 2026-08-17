@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { transactions as txApi, meals as mealApi, activities as actApi, Transaction, Meal, Activity, AppNotification } from './api';
 import { notificationService } from './notificationService';
@@ -24,6 +24,26 @@ const dayBucket = (date: string) => {
     return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 };
 
+/** Small hook that measures a container ref and returns { width, height }.
+ *  Falls back to the initial style dimensions if the container isn't visible yet. */
+function useContainerSize(ref: React.RefObject<HTMLDivElement | null>, defaultW: number, defaultH: number) {
+    const [size, setSize] = useState({ width: defaultW, height: defaultH });
+
+    useLayoutEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const ro = new ResizeObserver((entries) => {
+            const { width, height } = entries[0].contentRect;
+            setSize({ width: Math.max(0, width), height: Math.max(0, height) });
+        });
+        ro.observe(el);
+        const rect = el.getBoundingClientRect();
+        setSize({ width: Math.max(0, rect.width), height: Math.max(0, rect.height) });
+        return () => ro.disconnect();
+    }, []);
+
+    return size;
+}
 
 function Home() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -31,6 +51,14 @@ function Home() {
     const [activities, setActivities] = useState<Activity[]>([]);
     const [loading, setLoading] = useState(true);
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
+
+    const chart1Ref = useRef<HTMLDivElement>(null);
+    const chart2Ref = useRef<HTMLDivElement>(null);
+    const chart3Ref = useRef<HTMLDivElement>(null);
+
+    const chart1Size = useContainerSize(chart1Ref, 400, 240);
+    const chart2Size = useContainerSize(chart2Ref, 400, 240);
+    const chart3Size = useContainerSize(chart3Ref, 400, 220);
 
     useEffect(() => {
         (async () => {
@@ -52,18 +80,18 @@ function Home() {
                 const activityNotifications = notificationService.generateActivityNotifications(acs);
 
                 const generated = [...financeNotifications, ...mealNotifications, ...activityNotifications];
-                
+
                 // Only add new notifications that don't already exist
                 const existingNotifications = notificationService.getNotifications();
-                const newNotifications = generated.filter(newNotif => 
-                    !existingNotifications.some(existing => 
-                        existing.message === newNotif.message && 
+                const newNotifications = generated.filter(newNotif =>
+                    !existingNotifications.some(existing =>
+                        existing.message === newNotif.message &&
                         existing.type === newNotif.type
                     )
                 );
 
                 if (newNotifications.length > 0) {
-                    newNotifications.forEach(notif => notificationService.addNotification(notif));
+                    newNotifications.forEach(notif => notificationService.addNotification(notif, { silent: true }));
                 }
 
                 setNotifications(notificationService.getNotifications());
@@ -211,8 +239,8 @@ function Home() {
                         </div>
                         <span className="badge info"><span className="dot"></span> 7d</span>
                     </div>
-                    <div style={{ width: '100%', height: 240 }}>
-                        <ResponsiveContainer>
+                    <div ref={chart1Ref} style={{ width: '100%', height: 240 }}>
+                        <ResponsiveContainer width={chart1Size.width} height={chart1Size.height}>
                             <AreaChart data={balanceSeries}>
                                 <defs>
                                     <linearGradient id="balGrad" x1="0" y1="0" x2="0" y2="1">
@@ -237,11 +265,11 @@ function Home() {
                             <div className="card-sub">Lifetime distribution</div>
                         </div>
                     </div>
-                    <div style={{ width: '100%', height: 240 }}>
+                    <div ref={chart2Ref} style={{ width: '100%', height: 240 }}>
                         {categoryData.length === 0 ? (
                             <div className="empty"><div className="empty-icon">○</div>No transactions yet.</div>
                         ) : (
-                            <ResponsiveContainer>
+                            <ResponsiveContainer width={chart2Size.width} height={chart2Size.height}>
                                 <PieChart>
                                     <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={90} paddingAngle={3}>
                                         {categoryData.map((d, i) => <Cell key={i} fill={d.color} />)}
@@ -270,8 +298,8 @@ function Home() {
                             <div className="card-sub">Spending per day (last 7 days)</div>
                         </div>
                     </div>
-                    <div style={{ width: '100%', height: 220 }}>
-                        <ResponsiveContainer>
+                    <div ref={chart3Ref} style={{ width: '100%', height: 220 }}>
+                        <ResponsiveContainer width={chart3Size.width} height={chart3Size.height}>
                             <BarChart data={expenseSeries}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#232938" />
                                 <XAxis dataKey="day" stroke="#5b6377" tick={{ fontSize: 11 }} />

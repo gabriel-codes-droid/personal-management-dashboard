@@ -1,58 +1,129 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { trash as trashApi, TrashItem } from './api';
 
-interface TrashItem {
-    id: string;
-    itemType: 'transaction' | 'meal' | 'activity' | 'notification';
-    title?: string;
-    description?: string;
-    message?: string;
-    deletedAt: string;
-}
+const TYPE_LABEL: Record<TrashItem['itemType'], string> = {
+    transaction: 'Transaction',
+    meal: 'Meal',
+    activity: 'Activity',
+};
 
-// Trash kept as client-side for now — deleted items are removed from backend.
-// Keeping the page so the UI doesn't break; restore from backend via re-create if needed.
+const TYPE_ICON: Record<TrashItem['itemType'], string> = {
+    transaction: '◆',
+    meal: '◉',
+    activity: '▣',
+};
+
 function Trash() {
-    const [trash] = useState<TrashItem[]>(() => JSON.parse(localStorage.getItem('trash') || '[]'));
+    const [items, setItems] = useState<TrashItem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [busyId, setBusyId] = useState<string | null>(null);
+
+    const reload = async () => {
+        try {
+            const data = await trashApi.list();
+            setItems(data);
+        } catch {
+            setError('Failed to load trash.');
+        }
+    };
+
+    useEffect(() => {
+        (async () => {
+            await reload();
+            setLoading(false);
+        })();
+    }, []);
+
+    const restore = async (item: TrashItem) => {
+        setBusyId(item.id);
+        try {
+            await trashApi.restore(item.itemType, item.id);
+            await reload();
+        } catch {
+            setError('Failed to restore item.');
+        } finally {
+            setBusyId(null);
+        }
+    };
+
+    const deleteForever = async (item: TrashItem) => {
+        setBusyId(item.id);
+        try {
+            await trashApi.remove(item.itemType, item.id);
+            await reload();
+        } catch {
+            setError('Failed to permanently delete item.');
+        } finally {
+            setBusyId(null);
+        }
+    };
+
+    const emptyTrash = async () => {
+        if (items.length === 0) return;
+        if (!window.confirm(`Permanently delete all ${items.length} item(s) in trash? This cannot be undone.`)) return;
+        try {
+            await trashApi.empty();
+            await reload();
+        } catch {
+            setError('Failed to empty trash.');
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="loading-screen" style={{ minHeight: 'auto', padding: 80 }}>
+                <div className="spinner" />
+                <div>Loading trash...</div>
+            </div>
+        );
+    }
+
+    const counts = {
+        transaction: items.filter(i => i.itemType === 'transaction').length,
+        meal: items.filter(i => i.itemType === 'meal').length,
+        activity: items.filter(i => i.itemType === 'activity').length,
+    };
 
     return (
         <div>
             <div className="section-title">Trash</div>
-            <div className="section-sub">Deleted items are removed from the server. Use the API to restore if needed.</div>
+            <div className="section-sub">Deleted items land here first and can be restored, or permanently removed.</div>
 
-            <div className="grid grid-4 mb-md">
+            <div className="grid grid-3 mb-md">
                 <div className="kpi finance">
                     <div className="kpi-icon">◆</div>
                     <div className="kpi-label">Transactions</div>
-                    <div className="kpi-value">{trash.filter(i => i.itemType === 'transaction').length}</div>
+                    <div className="kpi-value">{counts.transaction}</div>
                 </div>
                 <div className="kpi meals">
                     <div className="kpi-icon">◉</div>
                     <div className="kpi-label">Meals</div>
-                    <div className="kpi-value">{trash.filter(i => i.itemType === 'meal').length}</div>
+                    <div className="kpi-value">{counts.meal}</div>
                 </div>
                 <div className="kpi activity">
                     <div className="kpi-icon">▣</div>
                     <div className="kpi-label">Activities</div>
-                    <div className="kpi-value">{trash.filter(i => i.itemType === 'activity').length}</div>
-                </div>
-                <div className="kpi accent">
-                    <div className="kpi-icon">◔</div>
-                    <div className="kpi-label">Notifications</div>
-                    <div className="kpi-value">{trash.filter(i => i.itemType === 'notification').length}</div>
+                    <div className="kpi-value">{counts.activity}</div>
                 </div>
             </div>
+
+            {error && <div className="auth-error">{error}</div>}
 
             <div className="card">
                 <div className="card-header">
                     <div>
                         <div className="card-title">Deleted Items</div>
-                        <div className="card-sub">{trash.length} items in trash</div>
+                        <div className="card-sub">{items.length} item{items.length === 1 ? '' : 's'} in trash</div>
                     </div>
+                    {items.length > 0 && (
+                        <button className="btn ghost sm" onClick={emptyTrash}>Empty Trash</button>
+                    )}
                 </div>
-                {trash.length === 0 ? (
+                {items.length === 0 ? (
                     <div className="empty">
                         <div className="empty-icon">○</div>
-                        Trash is empty. With backend sync, deletes are permanent — use the dashboard's edit features to manage your data.
+                        Trash is empty. Deleted transactions, meals, and activities will show up here.
                     </div>
                 ) : (
                     <table className="table">
@@ -61,18 +132,37 @@ function Trash() {
                                 <th>Type</th>
                                 <th>Item</th>
                                 <th>Deleted</th>
+                                <th style={{ width: 160 }}></th>
                             </tr>
                         </thead>
                         <tbody>
-                            {trash.map(item => (
-                                <tr key={item.id}>
+                            {items.map(item => (
+                                <tr key={`${item.itemType}-${item.id}`}>
                                     <td>
-                                        <span className="badge">{item.itemType}</span>
+                                        <span className="badge">{TYPE_ICON[item.itemType]} {TYPE_LABEL[item.itemType]}</span>
                                     </td>
                                     <td style={{ color: 'var(--text-0)', fontWeight: 500 }}>
-                                        {item.title || item.description || item.message || 'Unknown'}
+                                        {item.title || 'Untitled'}
+                                        {item.details && <span className="muted" style={{ fontWeight: 400 }}> — {item.details}</span>}
                                     </td>
-                                    <td className="muted">{item.deletedAt}</td>
+                                    <td className="muted">{new Date(item.deletedAt).toLocaleString()}</td>
+                                    <td style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                        <button
+                                            className="btn ghost sm"
+                                            disabled={busyId === item.id}
+                                            onClick={() => restore(item)}
+                                        >
+                                            Restore
+                                        </button>
+                                        <button
+                                            className="btn ghost sm"
+                                            disabled={busyId === item.id}
+                                            onClick={() => deleteForever(item)}
+                                            style={{ color: 'var(--danger)' }}
+                                        >
+                                            Delete
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>

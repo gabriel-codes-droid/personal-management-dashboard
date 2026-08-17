@@ -26,7 +26,7 @@ function Admin() {
             const [u, s] = await Promise.all([admin.listUsers(), admin.stats()]);
             setUsers(u);
             setStats(s);
-        } catch (e) {
+        } catch {
             setError('Failed to load admin data.');
         }
     };
@@ -42,7 +42,7 @@ function Admin() {
         try {
             await admin.setRole(id, role);
             await reload();
-        } catch (e) {
+        } catch {
             setError('Failed to update role.');
         }
     };
@@ -71,12 +71,12 @@ function Admin() {
     const viewUserDetails = async (user: User) => {
         setSelectedUser(user);
         setShowUserModal(true);
-        // Mock user activity data - in real app, this would come from backend
-        setUserActivities([
-            { userId: user._id, action: 'Account Created', timestamp: user.createdAt },
-            { userId: user._id, action: 'Last Login', timestamp: new Date().toISOString() },
-            { userId: user._id, action: 'Profile Updated', timestamp: new Date(Date.now() - 86400000).toISOString() },
-        ]);
+        try {
+            const { activities } = await admin.getUserActivity(user._id);
+            setUserActivities(activities);
+        } catch {
+            setUserActivities([]);
+        }
     };
 
     const filteredUsers = users.filter(u => {

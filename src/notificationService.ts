@@ -220,13 +220,13 @@ class NotificationService {
         }
     }
 
-    addNotification(notification: AppNotification): void {
+    addNotification(notification: AppNotification, opts?: { silent?: boolean }): void {
         const notifications = this.getNotifications();
         notifications.unshift(notification);
         this.saveNotifications(notifications);
 
-        // Show browser notification if permitted
-        if (this.permission === 'granted') {
+        // Show browser notification if permitted (skip when bulk-loading on page mount)
+        if (!opts?.silent && this.permission === 'granted') {
             this.showLocalNotification(notification.message, {
                 body: notification.timestamp,
                 tag: notification.type
