@@ -1,3 +1,4 @@
 /* PMD uses styles.css for all styling. This file is intentionally empty
    to override the default Vite scaffold body { display: flex; align-items: center }
    which was constraining the dashboard to its intrinsic content width. */
+@import "tailwindcss";
