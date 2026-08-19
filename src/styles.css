@@ -188,8 +188,20 @@ html[data-theme="light"] body {
     font-size: 24px !important;
   }
   
+  .section-title {
+    font-size: 20px;
+  }
+  
+  .section-sub {
+    font-size: 13px;
+  }
+  
+  .card {
+    padding: 16px;
+  }
+  
   .btn {
-    padding: 8px 12px;
+    padding: 10px 16px;
     font-size: 14px;
   }
   
@@ -197,6 +209,168 @@ html[data-theme="light"] body {
     padding: 10px 12px;
     font-size: 14px;
   }
+  
+  .tabs {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  
+  .tab {
+    padding: 8px 12px;
+    font-size: 13px;
+    flex: 1;
+    min-width: 80px;
+  }
+  
+  /* Improve mobile chart containers */
+  [style*="height: 240px"], [style*="height: 300px"] {
+    height: 200px !important;
+  }
+  
+  /* Mobile-friendly modals */
+  .settings-page {
+    padding: 16px;
+  }
+  
+  .settings-section {
+    padding: 16px;
+  }
+  
+  /* Better mobile spacing */
+  .mb-md {
+    margin-bottom: 16px !important;
+  }
+  
+  .mt-md {
+    margin-top: 16px !important;
+  }
+  
+  .mt-sm {
+    margin-top: 8px !important;
+  }
+  
+  /* Mobile-friendly avatar */
+  .avatar {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 14px !important;
+  }
+  
+  /* Compact topbar on mobile */
+  .topbar h1 {
+    font-size: 18px;
+  }
+  
+  /* Hide less important elements on mobile */
+  .sidebar-footer {
+    display: none;
+  }
+  
+  /* Better touch targets */
+  .btn.sm {
+    min-height: 36px;
+    min-width: 36px;
+  }
+  
+  /* Responsive charts */
+  .recharts-wrapper {
+    width: 100% !important;
+  }
+  
+  /* Mobile-friendly notifications */
+  .notif {
+    padding: 12px;
+    font-size: 14px;
+  }
+  
+  /* Mobile settings tabs */
+  .settings-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .settings-tabs .tab {
+    flex: none;
+  }
+}
+
+/* Theme selector styles for Settings */
+.theme-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 2px solid var(--border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--bg-2);
+}
+
+.theme-option:hover {
+  border-color: var(--accent);
+  background: var(--bg-3);
+}
+
+.theme-option.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.theme-preview {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.theme-preview.dark {
+  background: var(--bg-3);
+  color: var(--text-0);
+}
+
+.theme-preview.light {
+  background: #f5f7fb;
+  color: #0f172a;
+}
+
+.theme-info {
+  flex: 1;
+}
+
+.theme-name {
+  font-weight: 600;
+  color: var(--text-0);
+  margin-bottom: 4px;
+}
+
+.theme-desc {
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.theme-check {
+  color: var(--success);
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.appearance-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
   
   .auth-card {
     padding: 20px;

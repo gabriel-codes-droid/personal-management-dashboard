@@ -109,7 +109,7 @@ function Login() {
                 </form>
 
                 <div className="auth-switch">
-                    <a href="mailto:hello@pmd.local?subject=Password%20reset" className="auth-forgot">Forgot password?</a>
+                    <Link to="/forgot-password" className="auth-forgot">Forgot password?</Link>
                     <span className="auth-switch-sep">·</span>
                     No account?
                     <Link to="/signup">Create one</Link>

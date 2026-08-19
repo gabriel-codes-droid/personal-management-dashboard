@@ -13,6 +13,7 @@ import Admin from './Admin';
 import Settings from './Settings';
 import Login from './Login';
 import Signup from './SignUp';
+import ForgotPassword from './ForgotPassword';
 import './styles.css';
 
 function Sidebar({ open }: { open: boolean }) {
@@ -262,6 +263,7 @@ function Shell() {
         <Routes>
             <Route path="/login" element={<AuthGate><Login /></AuthGate>} />
             <Route path="/signup" element={<AuthGate><Signup /></AuthGate>} />
+            <Route path="/forgot-password" element={<AuthGate><ForgotPassword /></AuthGate>} />
             <Route path="/*" element={<ProtectedShell />} />
         </Routes>
     );

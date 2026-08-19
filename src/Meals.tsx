@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { meals as mealApi, Meal } from './api';
 import {
     PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid
 } from 'recharts';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 
 const DAILY_TARGET = 2000;
 const catColors: Record<string, string> = { breakfast: '#f59e0b', lunch: '#10b981', dinner: '#3b82f6', snack: '#a855f7' };
@@ -45,6 +46,9 @@ function Meals() {
     const [loadingSearch, setLoadingSearch] = useState(false);
     const [error, setError] = useState('');
     const [mode, setMode] = useState<'search' | 'manual' | 'dish' | 'barcode'>('search');
+    const [scannerActive, setScannerActive] = useState(false);
+    const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+    const scannerContainerRef = useRef<HTMLDivElement>(null);
 
     const [query, setQuery] = useState('');
     const [manualTitle, setManualTitle] = useState('');
@@ -79,6 +83,55 @@ function Meals() {
             setLoading(false);
         })();
     }, []);
+
+    // Cleanup scanner on unmount
+    useEffect(() => {
+        return () => {
+            if (scannerRef.current) {
+                scannerRef.current.clear().catch(console.error);
+            }
+        };
+    }, []);
+
+    // Initialize scanner when active
+    useEffect(() => {
+        if (scannerActive && scannerContainerRef.current) {
+            const scanner = new Html5QrcodeScanner(
+                'qr-reader',
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0,
+                },
+                false
+            );
+            scanner.render(onScanSuccess, onScanFailure);
+            scannerRef.current = scanner;
+        }
+    }, [scannerActive]);
+
+    const startScanner = () => {
+        setScannerActive(true);
+        setError('');
+    };
+
+    const stopScanner = () => {
+        if (scannerRef.current) {
+            scannerRef.current.clear().catch(console.error);
+            scannerRef.current = null;
+        }
+        setScannerActive(false);
+    };
+
+    const onScanSuccess = async (decodedText: string) => {
+        stopScanner();
+        setBarcodeInput(decodedText);
+        await searchByBarcode(decodedText);
+    };
+
+    const onScanFailure = (error: string) => {
+        // Silently handle scan failures (common during scanning)
+    };
 
     const searchFood = async () => {
         if (query.trim() === '') return;
@@ -389,18 +442,39 @@ function Meals() {
 
                 {mode === 'barcode' && (
                     <div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'end' }}>
-                            <div className="field">
-                                <label>Barcode / EAN</label>
-                                <input className="input" placeholder="Enter barcode or scan..." value={barcodeInput} onChange={e => setBarcodeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchByBarcode(barcodeInput)} />
+                        {!scannerActive ? (
+                            <>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'end' }}>
+                                    <div className="field">
+                                        <label>Barcode / EAN</label>
+                                        <input className="input" placeholder="Enter barcode or scan..." value={barcodeInput} onChange={e => setBarcodeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchByBarcode(barcodeInput)} />
+                                    </div>
+                                    <button className="btn primary" onClick={() => searchByBarcode(barcodeInput)} disabled={loadingSearch} style={{ height: 40 }}>
+                                        {loadingSearch ? 'Searching...' : '🔍 Lookup'}
+                                    </button>
+                                </div>
+                                <div className="muted mt-sm" style={{ fontSize: 12 }}>
+                                    Enter a product barcode (EAN-13, UPC, etc.) to fetch nutrition data from OpenFoodFacts database.
+                                </div>
+                                <div className="mt-md">
+                                    <button className="btn ghost" onClick={startScanner}>📷 Scan with Camera</button>
+                                </div>
+                            </>
+                        ) : (
+                            <div>
+                                <div className="card-header" style={{ marginBottom: 12 }}>
+                                    <div>
+                                        <div className="card-title">Scan Barcode</div>
+                                        <div className="card-sub">Point camera at product barcode</div>
+                                    </div>
+                                    <button className="btn ghost sm" onClick={stopScanner}>✕ Close</button>
+                                </div>
+                                <div ref={scannerContainerRef} id="qr-reader" style={{ width: '100%', minHeight: 300 }} />
+                                <div className="muted mt-sm" style={{ fontSize: 12 }}>
+                                    Allow camera access when prompted. Hold the barcode steady in the frame.
+                                </div>
                             </div>
-                            <button className="btn primary" onClick={() => searchByBarcode(barcodeInput)} disabled={loadingSearch} style={{ height: 40 }}>
-                                {loadingSearch ? 'Searching...' : '🔍 Lookup'}
-                            </button>
-                        </div>
-                        <div className="muted mt-sm" style={{ fontSize: 12 }}>
-                            Enter a product barcode (EAN-13, UPC, etc.) to fetch nutrition data from OpenFoodFacts database.
-                        </div>
+                        )}
                     </div>
                 )}
 

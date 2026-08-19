@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { AppNotification } from './api';
 import { notificationService } from './notificationService';
+import api from './api';
 
 function Notifications() {
     const [notifications, setNotifications] = useState<AppNotification[]>(() => notificationService.getNotifications());
     const [permission, setPermission] = useState<string>('default');
+    const [emailEnabled, setEmailEnabled] = useState(false);
+    const [sendingDigest, setSendingDigest] = useState(false);
+    const [digestMessage, setDigestMessage] = useState('');
 
     useEffect(() => {
         const checkPermission = () => {
@@ -13,6 +17,17 @@ function Notifications() {
             }
         };
         checkPermission();
+        
+        // Load email notification preference
+        const loadEmailPref = async () => {
+            try {
+                const user = await api.get('/auth/me');
+                setEmailEnabled(user.data.emailNotificationsEnabled || false);
+            } catch {
+                // Ignore error
+            }
+        };
+        loadEmailPref();
     }, []);
 
     const refreshNotifications = () => {
@@ -32,6 +47,33 @@ function Notifications() {
     const requestPermission = async () => {
         const granted = await notificationService.requestPermission();
         setPermission(granted ? 'granted' : 'denied');
+    };
+
+    const toggleEmailNotifications = async () => {
+        try {
+            await api.post('/analytics/toggle-email-notifications', { enabled: !emailEnabled });
+            setEmailEnabled(!emailEnabled);
+            setDigestMessage(!emailEnabled ? 'Email notifications enabled' : 'Email notifications disabled');
+            setTimeout(() => setDigestMessage(''), 3000);
+        } catch {
+            setDigestMessage('Failed to update preferences');
+            setTimeout(() => setDigestMessage(''), 3000);
+        }
+    };
+
+    const sendDigest = async () => {
+        setSendingDigest(true);
+        setDigestMessage('');
+        try {
+            await api.post('/analytics/send-digest');
+            setDigestMessage('Digest sent successfully!');
+            setTimeout(() => setDigestMessage(''), 3000);
+        } catch {
+            setDigestMessage('Failed to send digest');
+            setTimeout(() => setDigestMessage(''), 3000);
+        } finally {
+            setSendingDigest(false);
+        }
     };
 
     const unread = notifications.filter(n => !n.read).length;
@@ -81,6 +123,39 @@ function Notifications() {
                         : 'Click "Enable" to receive push notifications for important events.'
                     }
                 </div>
+            </div>
+
+            <div className="card mb-md">
+                <div className="card-header">
+                    <div>
+                        <div className="card-title">Email Digest</div>
+                        <div className="card-sub">Receive daily summary via email</div>
+                    </div>
+                    <button 
+                        className={'btn ghost sm ' + (emailEnabled ? 'success' : '')}
+                        onClick={toggleEmailNotifications}
+                    >
+                        {emailEnabled ? '✓ Enabled' : 'Enable'}
+                    </button>
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 12 }}>
+                    {emailEnabled 
+                        ? 'Email digests are enabled. You will receive daily summaries.'
+                        : 'Email digests are disabled. Enable to receive daily summaries.'
+                    }
+                </div>
+                {digestMessage && (
+                    <div className={'auth-error ' + (digestMessage.includes('success') || digestMessage.includes('enabled') ? 'success' : '')} style={{ marginBottom: 12 }}>
+                        {digestMessage}
+                    </div>
+                )}
+                <button 
+                    className="btn primary sm" 
+                    onClick={sendDigest}
+                    disabled={!emailEnabled || sendingDigest}
+                >
+                    {sendingDigest ? 'Sending...' : '📧 Send Test Digest'}
+                </button>
             </div>
 
             <div className="card">

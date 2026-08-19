@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { auth } from './api';
 import { useAuth } from './auth';
+import { useTheme } from './theme';
 
 export default function Settings() {
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile');
+    const { theme, toggle, setTheme } = useTheme();
+    const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'appearance'>('profile');
     
     // Profile state
     const [profileImage, setProfileImage] = useState(user?.profileImage || '');
@@ -123,6 +125,12 @@ export default function Settings() {
                     onClick={() => setActiveTab('security')}
                 >
                     🔒 Security
+                </button>
+                <button 
+                    className={`tab ${activeTab === 'appearance' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('appearance')}
+                >
+                    🎨 Appearance
                 </button>
             </div>
 
@@ -298,6 +306,52 @@ export default function Settings() {
                             {resetMessage.text}
                         </div>
                     )}
+                </div>
+            )}
+
+            {activeTab === 'appearance' && (
+                <div className="settings-section">
+                    <h3>Theme</h3>
+                    <p className="help-text">Customize the appearance of your dashboard</p>
+                    
+                    <div className="theme-selector">
+                        <div 
+                            className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
+                            onClick={() => setTheme('dark')}
+                        >
+                            <div className="theme-preview dark">
+                                <span className="theme-icon">☾</span>
+                            </div>
+                            <div className="theme-info">
+                                <div className="theme-name">Dark Mode</div>
+                                <div className="theme-desc">Default dark theme</div>
+                            </div>
+                            {theme === 'dark' && <div className="theme-check">✓</div>}
+                        </div>
+                        
+                        <div 
+                            className={`theme-option ${theme === 'light' ? 'active' : ''}`}
+                            onClick={() => setTheme('light')}
+                        >
+                            <div className="theme-preview light">
+                                <span className="theme-icon">☀</span>
+                            </div>
+                            <div className="theme-info">
+                                <div className="theme-name">Light Mode</div>
+                                <div className="theme-desc">Lighter theme</div>
+                            </div>
+                            {theme === 'light' && <div className="theme-check">✓</div>}
+                        </div>
+                    </div>
+
+                    <div className="appearance-actions">
+                        <button 
+                            className="btn primary"
+                            onClick={toggle}
+                        >
+                            Toggle Theme ({theme === 'dark' ? '☀' : '☾'})
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
