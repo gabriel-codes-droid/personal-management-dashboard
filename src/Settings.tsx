@@ -3,6 +3,15 @@ import { auth } from './api';
 import { useAuth } from './auth';
 import { useTheme } from './theme';
 
+const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = error => reject(error);
+    });
+};
+
 export default function Settings() {
     const { user } = useAuth();
     const { theme, toggle, setTheme } = useTheme();
@@ -10,8 +19,39 @@ export default function Settings() {
     
     // Profile state
     const [profileImage, setProfileImage] = useState(user?.profileImage || '');
+    const [uploadingImage, setUploadingImage] = useState(false);
     const [savingProfile, setSavingProfile] = useState(false);
     const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            setProfileMessage({ type: 'error', text: 'Please select an image file' });
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setProfileMessage({ type: 'error', text: 'Image must be less than 5MB' });
+            return;
+        }
+
+        setUploadingImage(true);
+        setProfileMessage(null);
+
+        try {
+            const base64 = await convertToBase64(file);
+            setProfileImage(base64);
+            setProfileMessage({ type: 'success', text: 'Image uploaded successfully' });
+        } catch (error) {
+            setProfileMessage({ type: 'error', text: 'Failed to process image' });
+        } finally {
+            setUploadingImage(false);
+        }
+    };
 
     // Security state
     const [currentPassword, setCurrentPassword] = useState('');
@@ -139,30 +179,47 @@ export default function Settings() {
                     <h3>Profile Image</h3>
                     <div className="profile-image-section">
                         <div className="current-avatar">
-                            {user?.profileImage ? (
-                                <img src={user.profileImage} alt="Profile" className="avatar-preview" />
+                            {profileImage || user?.profileImage ? (
+                                <img src={profileImage || user?.profileImage} alt="Profile" className="avatar-preview" />
                             ) : (
                                 <div className="avatar-placeholder">
                                     {user?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'}
                                 </div>
                             )}
                         </div>
-                        <div className="image-input-section">
-                            <label>Profile Image URL</label>
-                            <input
-                                type="text"
-                                value={profileImage}
-                                onChange={(e) => setProfileImage(e.target.value)}
-                                placeholder="https://example.com/image.jpg"
-                                className="input"
-                            />
+                        <div className="image-upload-section">
+                            <div className="upload-placeholder">
+                                <input
+                                    type="file"
+                                    id="profile-image-upload"
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                    className="file-input"
+                                    disabled={uploadingImage}
+                                />
+                                <label htmlFor="profile-image-upload" className="upload-label">
+                                    <div className="upload-icon">📷</div>
+                                    <div className="upload-text">
+                                        {uploadingImage ? 'Processing...' : 'Click to upload image'}
+                                    </div>
+                                    <div className="upload-hint">PNG, JPG up to 5MB</div>
+                                </label>
+                            </div>
                             <button 
                                 className="btn primary"
                                 onClick={handleSaveProfile}
-                                disabled={savingProfile}
+                                disabled={savingProfile || !profileImage}
                             >
                                 {savingProfile ? 'Saving...' : 'Save Profile Image'}
                             </button>
+                            {profileImage && (
+                                <button 
+                                    className="btn ghost"
+                                    onClick={() => setProfileImage('')}
+                                >
+                                    Remove Image
+                                </button>
+                            )}
                         </div>
                     </div>
                     {profileMessage && (
