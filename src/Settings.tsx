@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { auth } from './api';
 import { useAuth } from './auth';
 import { useTheme } from './theme';
 
@@ -13,7 +12,7 @@ const convertToBase64 = (file: File): Promise<string> => {
 };
 
 export default function Settings() {
-    const { user } = useAuth();
+    const { user, updateProfile, updatePassword, resetPassword } = useAuth();
     const { theme, toggle, setTheme } = useTheme();
     const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'appearance'>('profile');
     
@@ -62,9 +61,7 @@ export default function Settings() {
 
     // Forgot password state
     const [resetEmail, setResetEmail] = useState('');
-    const [resetCode, setResetCode] = useState('');
-    const [resetNewPassword, setResetNewPassword] = useState('');
-    const [resetStep, setResetStep] = useState<'email' | 'code' | 'success'>('email');
+    const [resetStep, setResetStep] = useState<'email' | 'success'>('email');
     const [resettingPassword, setResettingPassword] = useState(false);
     const [resetMessage, setResetMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -72,12 +69,10 @@ export default function Settings() {
         setSavingProfile(true);
         setProfileMessage(null);
         try {
-            await auth.updateProfileImage(profileImage);
+            await updateProfile(profileImage);
             setProfileMessage({ type: 'success', text: 'Profile image updated successfully' });
-            // Reload user data
-            window.location.reload();
         } catch (error: any) {
-            setProfileMessage({ type: 'error', text: error.response?.data?.message || 'Failed to update profile image' });
+            setProfileMessage({ type: 'error', text: error.message || 'Failed to update profile image' });
         } finally {
             setSavingProfile(false);
         }
@@ -96,13 +91,13 @@ export default function Settings() {
         setChangingPassword(true);
         setPasswordMessage(null);
         try {
-            await auth.changePassword(currentPassword, newPassword);
+            await updatePassword(newPassword);
             setPasswordMessage({ type: 'success', text: 'Password changed successfully' });
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
         } catch (error: any) {
-            setPasswordMessage({ type: 'error', text: error.response?.data?.message || 'Failed to change password' });
+            setPasswordMessage({ type: 'error', text: error.message || 'Failed to change password' });
         } finally {
             setChangingPassword(false);
         }
@@ -112,35 +107,11 @@ export default function Settings() {
         setResettingPassword(true);
         setResetMessage(null);
         try {
-            await auth.forgotPassword(resetEmail);
-            setResetStep('code');
-            setResetMessage({ type: 'success', text: 'Reset code sent to your email' });
-        } catch (error: any) {
-            setResetMessage({ type: 'error', text: error.response?.data?.message || 'Failed to send reset code' });
-        } finally {
-            setResettingPassword(false);
-        }
-    };
-
-    const handleResetPassword = async () => {
-        if (resetNewPassword.length < 6) {
-            setResetMessage({ type: 'error', text: 'Password must be at least 6 characters' });
-            return;
-        }
-
-        setResettingPassword(true);
-        setResetMessage(null);
-        try {
-            // First verify the code to get the full token
-            const verifyResponse = await auth.verifyResetCode(resetEmail, resetCode);
-            const fullToken = verifyResponse.resetToken;
-            
-            // Then reset password with the full token
-            await auth.resetPassword(resetEmail, fullToken, resetNewPassword);
+            await resetPassword(resetEmail);
             setResetStep('success');
-            setResetMessage({ type: 'success', text: 'Password reset successfully' });
+            setResetMessage({ type: 'success', text: 'Password reset email sent. Check your inbox.' });
         } catch (error: any) {
-            setResetMessage({ type: 'error', text: error.response?.data?.message || 'Failed to reset password' });
+            setResetMessage({ type: 'error', text: error.message || 'Failed to send reset email' });
         } finally {
             setResettingPassword(false);
         }
@@ -281,7 +252,7 @@ export default function Settings() {
                     <div className="divider" />
 
                     <h3>Forgot Password</h3>
-                    <p className="help-text">Can't remember your password? We'll send you a reset code via email.</p>
+                    <p className="help-text">Can't remember your password? We'll send you a password reset link via email.</p>
                     
                     {resetStep === 'email' && (
                         <div className="forgot-password-form">
@@ -300,46 +271,7 @@ export default function Settings() {
                                 onClick={handleForgotPassword}
                                 disabled={resettingPassword}
                             >
-                                {resettingPassword ? 'Sending...' : 'Send Reset Code'}
-                            </button>
-                        </div>
-                    )}
-
-                    {resetStep === 'code' && (
-                        <div className="forgot-password-form">
-                            <div className="form-group">
-                                <label>Reset Code</label>
-                                <input
-                                    type="text"
-                                    value={resetCode}
-                                    onChange={(e) => setResetCode(e.target.value)}
-                                    className="input"
-                                    placeholder="Enter 6-digit code from email"
-                                    maxLength={6}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>New Password</label>
-                                <input
-                                    type="password"
-                                    value={resetNewPassword}
-                                    onChange={(e) => setResetNewPassword(e.target.value)}
-                                    className="input"
-                                    placeholder="Enter new password (min 6 characters)"
-                                />
-                            </div>
-                            <button 
-                                className="btn primary"
-                                onClick={handleResetPassword}
-                                disabled={resettingPassword}
-                            >
-                                {resettingPassword ? 'Resetting...' : 'Reset Password'}
-                            </button>
-                            <button 
-                                className="btn ghost"
-                                onClick={() => setResetStep('email')}
-                            >
-                                Back
+                                {resettingPassword ? 'Sending...' : 'Send Reset Link'}
                             </button>
                         </div>
                     )}
@@ -347,8 +279,8 @@ export default function Settings() {
                     {resetStep === 'success' && (
                         <div className="success-message">
                             <div className="success-icon">✓</div>
-                            <h4>Password Reset Successful</h4>
-                            <p>You can now log in with your new password.</p>
+                            <h4>Password Reset Email Sent</h4>
+                            <p>Check your email for the password reset link. The link will expire in 1 hour.</p>
                             <button 
                                 className="btn primary"
                                 onClick={() => setResetStep('email')}

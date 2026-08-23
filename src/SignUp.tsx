@@ -2,14 +2,13 @@ import { useState, useEffect, FormEvent, type ChangeEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from './auth';
 import { useTheme } from './theme';
-import { auth as authApi } from './api';
 import { validateUsername, validateEmail, validatePassword, passwordStrength, PasswordStrength } from './validation';
 
 type AvailabilityStatus = 'unknown' | 'checking' | 'available' | 'taken';
 
 function Signup() {
     const navigate = useNavigate();
-    const { signup } = useAuth();
+    const { signup, checkEmail, checkUsername } = useAuth();
     const { theme, toggle } = useTheme();
 
     const [usernameRaw, setUsernameRaw] = useState('');
@@ -44,14 +43,14 @@ function Signup() {
         setEmailStatus('checking');
         const t = setTimeout(async () => {
             try {
-                const { available } = await authApi.checkEmail(trimmed);
+                const available = await checkEmail(trimmed);
                 setEmailStatus(available ? 'available' : 'taken');
             } catch {
                 setEmailStatus('unknown');
             }
         }, 500);
         return () => clearTimeout(t);
-    }, [email]);
+    }, [email, checkEmail]);
 
     // Debounced live check for username availability
     useEffect(() => {
@@ -63,14 +62,14 @@ function Signup() {
         setUsernameStatus('checking');
         const t = setTimeout(async () => {
             try {
-                const { available } = await authApi.checkUsername(trimmed);
+                const available = await checkUsername(trimmed);
                 setUsernameStatus(available ? 'available' : 'taken');
             } catch {
                 setUsernameStatus('unknown');
             }
         }, 500);
         return () => clearTimeout(t);
-    }, [username]);
+    }, [username, checkUsername]);
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -96,16 +95,15 @@ function Signup() {
             await signup(username.trim(), email.trim(), password);
             navigate('/', { replace: true });
         } catch (err: any) {
-            // Surface the backend's reason. axios error shape: err.response.data.message
-            const serverMsg = err.response?.data?.message;
-            const reason = serverMsg || err.message || 'Signup failed. Please try again.';
+            // Firebase errors have code and message properties
+            const reason = err.message || 'Signup failed. Please try again.';
             setError(reason);
-            // If the server pinpoints a field, mark it inline too
-            const field = err.response?.data?.field;
-            if (field === 'email' || field === 'username') {
-                setFieldErrors(f => ({ ...f, [field]: reason }));
-                if (field === 'email') setEmailStatus('taken');
-                if (field === 'username') setUsernameStatus('taken');
+            // Handle Firebase-specific error codes
+            if (err.code === 'auth/email-already-in-use') {
+                setFieldErrors(f => ({ ...f, email: 'This email is already registered.' }));
+                setEmailStatus('taken');
+            } else if (err.code === 'auth/weak-password') {
+                setFieldErrors(f => ({ ...f, password: 'Password is too weak.' }));
             }
         } finally {
             setLoading(false);

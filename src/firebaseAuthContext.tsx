@@ -40,14 +40,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (!cancelled) {
                 setUser(userData);
                 setFirebaseUser(userData ? { uid: userData.uid, email: userData.email } as FirebaseUser : null);
-                // Store userId for API calls
-                if (userData) {
-                    localStorage.setItem('currentUserId', userData.uid);
-                    localStorage.setItem('pmd_user', JSON.stringify(userData));
-                } else {
-                    localStorage.removeItem('currentUserId');
-                    localStorage.removeItem('pmd_user');
-                }
                 setLoading(false);
             }
         });
@@ -74,8 +66,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await signOut();
         setUser(null);
         setFirebaseUser(null);
-        localStorage.removeItem('currentUserId');
-        localStorage.removeItem('pmd_user');
     }, []);
 
     const updateProfile = useCallback(async (profileImage: string) => {

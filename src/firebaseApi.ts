@@ -4,6 +4,7 @@ import { transactionOperations, Transaction } from './firebaseDb';
 import { savingsGoalOperations, SavingsGoal } from './firebaseDb';
 import { trashOperations, TrashItem } from './firebaseDb';
 import { analyticsOperations } from './firebaseAnalytics';
+import { useAuth } from './firebaseAuthContext';
 
 // Types matching the existing API
 export interface User {
@@ -21,24 +22,7 @@ export interface AuthResponse {
     user: User;
 }
 
-export interface AppNotification {
-    type: 'success' | 'warning' | 'danger' | 'info';
-    icon: string;
-    message: string;
-    timestamp: string;
-    read: boolean;
-}
-
-export interface AdminStats {
-    totalUsers: number;
-    totalTransactions: number;
-    totalMeals: number;
-    totalActivities: number;
-}
-
-// Re-export types for components
-export { Meal, Activity, Transaction, SavingsGoal, TrashItem };
-
+// Firebase API Methods - uses hooks internally for user context
 export const auth = {
     signup: async (data: { username: string; email: string; password: string }) => {
         // This will be called from the auth context
@@ -53,12 +37,12 @@ export const auth = {
         throw new Error('Use AuthContext instead');
     },
     checkEmail: async (email: string) => {
-        const { checkEmailAvailability } = await import('./firebaseAuth');
-        return await checkEmailAvailability(email);
+        const { checkEmail } = await import('./firebaseAuth');
+        return await checkEmail(email);
     },
     checkUsername: async (username: string) => {
-        const { checkUsernameAvailability } = await import('./firebaseAuth');
-        return await checkUsernameAvailability(username);
+        const { checkUsername } = await import('./firebaseAuth');
+        return await checkUsername(username);
     },
     forgotPassword: async (email: string) => {
         const { forgotPassword } = await import('./firebaseAuth');
@@ -84,14 +68,16 @@ export const auth = {
 
 export const meals = {
     list: async () => {
+        const { useAuth } = await import('./firebaseAuthContext');
+        // This is a hack - in real usage, you'd pass userId as a parameter
         const userId = localStorage.getItem('currentUserId') || '';
         return await mealOperations.list(userId);
     },
-    create: async (data: any) => {
+    create: async (data: Omit<Meal, 'id' | 'createdAt' | 'updatedAt'>) => {
         const userId = localStorage.getItem('currentUserId') || '';
         return await mealOperations.create({ ...data, userId });
     },
-    update: async (id: string, data: any) => {
+    update: async (id: string, data: Partial<Meal>) => {
         return await mealOperations.update(id, data);
     },
     remove: async (id: string) => {
@@ -104,11 +90,11 @@ export const transactions = {
         const userId = localStorage.getItem('currentUserId') || '';
         return await transactionOperations.list(userId);
     },
-    create: async (data: any) => {
+    create: async (data: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => {
         const userId = localStorage.getItem('currentUserId') || '';
         return await transactionOperations.create({ ...data, userId });
     },
-    update: async (id: string, data: any) => {
+    update: async (id: string, data: Partial<Transaction>) => {
         return await transactionOperations.update(id, data);
     },
     remove: async (id: string) => {
@@ -121,11 +107,11 @@ export const activities = {
         const userId = localStorage.getItem('currentUserId') || '';
         return await activityOperations.list(userId);
     },
-    create: async (data: any) => {
+    create: async (data: Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>) => {
         const userId = localStorage.getItem('currentUserId') || '';
         return await activityOperations.create({ ...data, userId });
     },
-    update: async (id: string, data: any) => {
+    update: async (id: string, data: Partial<Activity>) => {
         return await activityOperations.update(id, data);
     },
     remove: async (id: string) => {
@@ -144,6 +130,8 @@ export const savingsGoals = {
             ...data, 
             userId,
             deletedAt: undefined,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
         });
     },
     update: async (id: string, data: Partial<{ name: string; target: number; current: number; deadline: string }>) => {
@@ -213,5 +201,3 @@ export const analytics = {
         return await analyticsOperations.getDailyActivity(userId, days);
     },
 };
-
-export default {};
