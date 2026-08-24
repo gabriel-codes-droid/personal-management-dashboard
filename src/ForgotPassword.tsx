@@ -49,10 +49,11 @@ function ForgotPassword() {
 
         setLoading(true);
         try {
-            await auth.verifyResetCode(email.trim(), code.trim());
+            // Firebase uses email links for password reset, not codes
+            await auth.forgotPassword(email.trim());
             setStep('password');
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Invalid or expired code.');
+            setError(err.response?.data?.message || 'Failed to send reset email.');
         } finally {
             setLoading(false);
         }
@@ -67,8 +68,9 @@ function ForgotPassword() {
 
         setLoading(true);
         try {
-            await auth.resetPassword(email.trim(), code.trim(), password);
-            setStep('done');
+            // Firebase uses email links for password reset, not codes
+            // This would be handled via the email link flow
+            setError('Please check your email for the password reset link.');
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to reset password. Please try again.');
         } finally {

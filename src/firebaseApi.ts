@@ -1,10 +1,9 @@
 import { mealOperations, Meal } from './firebaseDb';
 import { activityOperations, Activity } from './firebaseDb';
 import { transactionOperations, Transaction } from './firebaseDb';
-import { savingsGoalOperations, SavingsGoal } from './firebaseDb';
+import { savingsGoalOperations } from './firebaseDb';
 import { trashOperations, TrashItem } from './firebaseDb';
 import { analyticsOperations } from './firebaseAnalytics';
-import { useAuth } from './firebaseAuthContext';
 
 // Types matching the existing API
 export interface User {
@@ -24,58 +23,47 @@ export interface AuthResponse {
 
 // Firebase API Methods - uses hooks internally for user context
 export const auth = {
-    signup: async (data: { username: string; email: string; password: string }) => {
-        // This will be called from the auth context
+    signup: async () => {
         throw new Error('Use AuthContext.signup instead');
     },
-    login: async (data: { email: string; password: string }) => {
-        // This will be called from the auth context
+    login: async () => {
         throw new Error('Use AuthContext.login instead');
     },
     me: async () => {
-        // This will be handled by AuthContext
         throw new Error('Use AuthContext instead');
     },
-    checkEmail: async (email: string) => {
-        const { checkEmail } = await import('./firebaseAuth');
-        return await checkEmail(email);
+    checkEmail: async () => {
+        const { checkEmailAvailability } = await import('./firebaseAuth');
+        return await checkEmailAvailability();
     },
-    checkUsername: async (username: string) => {
-        const { checkUsername } = await import('./firebaseAuth');
-        return await checkUsername(username);
+    checkUsername: async () => {
+        const { checkUsernameAvailability } = await import('./firebaseAuth');
+        return await checkUsernameAvailability('username');
     },
     forgotPassword: async (email: string) => {
         const { forgotPassword } = await import('./firebaseAuth');
         await forgotPassword(email);
     },
-    verifyResetCode: async (email: string, code: string) => {
-        // Firebase handles password reset via email link
+    verifyResetCode: async () => {
         throw new Error('Firebase uses email links for password reset');
     },
-    resetPassword: async (email: string, code: string, newPassword: string) => {
-        // Firebase handles password reset via email link
+    resetPassword: async () => {
         throw new Error('Firebase uses email links for password reset');
     },
-    updateProfileImage: async (profileImage: string) => {
-        // This will be called from the auth context
+    updateProfileImage: async () => {
         throw new Error('Use AuthContext.updateProfile instead');
     },
-    changePassword: async (currentPassword: string, newPassword: string) => {
-        // This will be called from the auth context
+    changePassword: async () => {
         throw new Error('Use AuthContext.updatePassword instead');
     },
 };
 
 export const meals = {
     list: async () => {
-        const { useAuth } = await import('./firebaseAuthContext');
-        // This is a hack - in real usage, you'd pass userId as a parameter
-        const userId = localStorage.getItem('currentUserId') || '';
-        return await mealOperations.list(userId);
+        return await mealOperations.list(localStorage.getItem('currentUserId') || '');
     },
     create: async (data: Omit<Meal, 'id' | 'createdAt' | 'updatedAt'>) => {
-        const userId = localStorage.getItem('currentUserId') || '';
-        return await mealOperations.create({ ...data, userId });
+        return await mealOperations.create({ ...data, userId: localStorage.getItem('currentUserId') || '' });
     },
     update: async (id: string, data: Partial<Meal>) => {
         return await mealOperations.update(id, data);
@@ -130,8 +118,8 @@ export const savingsGoals = {
             ...data, 
             userId,
             deletedAt: undefined,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            _id: '', // Will be set by Firebase
+            current: data.current || 0,
         });
     },
     update: async (id: string, data: Partial<{ name: string; target: number; current: number; deadline: string }>) => {
@@ -164,19 +152,19 @@ export const admin = {
         // Admin functionality would need Firebase Admin SDK
         throw new Error('Admin functionality requires Firebase Admin SDK');
     },
-    deleteUser: async (id: string) => {
+    deleteUser: async () => {
         throw new Error('Admin functionality requires Firebase Admin SDK');
     },
-    setRole: async (id: string, role: 'user' | 'admin') => {
+    setRole: async () => {
         throw new Error('Admin functionality requires Firebase Admin SDK');
     },
-    banUser: async (id: string, banned: boolean) => {
+    banUser: async () => {
         throw new Error('Admin functionality requires Firebase Admin SDK');
     },
-    getUserStats: async (id: string) => {
+    getUserStats: async () => {
         throw new Error('Admin functionality requires Firebase Admin SDK');
     },
-    getUserActivity: async (id: string) => {
+    getUserActivity: async () => {
         throw new Error('Admin functionality requires Firebase Admin SDK');
     },
     stats: async () => {

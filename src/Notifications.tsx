@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AppNotification } from './api';
 import { notificationService } from './notificationService';
-import api from './api';
 
 function Notifications() {
     const [notifications, setNotifications] = useState<AppNotification[]>(() => notificationService.getNotifications());
@@ -21,8 +20,9 @@ function Notifications() {
         // Load email notification preference
         const loadEmailPref = async () => {
             try {
-                const user = await api.get('/auth/me');
-                setEmailEnabled(user.data.emailNotificationsEnabled || false);
+                // Firebase doesn't have email notifications by default
+                // This would need to be implemented separately
+                setEmailEnabled(false);
             } catch {
                 // Ignore error
             }
@@ -51,9 +51,9 @@ function Notifications() {
 
     const toggleEmailNotifications = async () => {
         try {
-            await api.post('/analytics/toggle-email-notifications', { enabled: !emailEnabled });
-            setEmailEnabled(!emailEnabled);
-            setDigestMessage(!emailEnabled ? 'Email notifications enabled' : 'Email notifications disabled');
+            // Firebase doesn't have built-in email notifications
+            // This would need to be implemented with Firebase Cloud Functions
+            setDigestMessage('Email notifications require Firebase Cloud Functions');
             setTimeout(() => setDigestMessage(''), 3000);
         } catch {
             setDigestMessage('Failed to update preferences');
@@ -65,8 +65,9 @@ function Notifications() {
         setSendingDigest(true);
         setDigestMessage('');
         try {
-            await api.post('/analytics/send-digest');
-            setDigestMessage('Digest sent successfully!');
+            // Firebase doesn't have built-in email digests
+            // This would need to be implemented with Firebase Cloud Functions
+            setDigestMessage('Email digests require Firebase Cloud Functions');
             setTimeout(() => setDigestMessage(''), 3000);
         } catch {
             setDigestMessage('Failed to send digest');

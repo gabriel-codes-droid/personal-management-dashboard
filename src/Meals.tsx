@@ -129,7 +129,7 @@ function Meals() {
         await searchByBarcode(decodedText);
     };
 
-    const onScanFailure = (error: string) => {
+    const onScanFailure = () => {
         // Silently handle scan failures (common during scanning)
     };
 
@@ -608,7 +608,7 @@ function Meals() {
                                         <td className="muted">{m.protein || '-'}g</td>
                                         <td className="muted">{m.carbs || '-'}g</td>
                                         <td className="muted">{m.fat || '-'}g</td>
-                                        <td><button className="btn ghost sm" onClick={() => removeMeal(m._id)}>✕</button></td>
+                                        <td><button className="btn ghost sm" onClick={() => removeMeal(m._id || m.id)}>✕</button></td>
                                     </tr>
                                 ))}
                             </tbody>

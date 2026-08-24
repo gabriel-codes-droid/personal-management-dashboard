@@ -7,6 +7,7 @@ import { analyticsOperations } from './firebaseAnalytics';
 
 // Types matching the existing API
 export interface User {
+    _id: string;
     uid: string;
     username: string;
     email: string;
@@ -36,25 +37,21 @@ export interface AdminStats {
     totalActivities: number;
 }
 
-// Re-export types for components
-export { Meal, Activity, Transaction, SavingsGoal, TrashItem };
+export type { Meal, Activity, Transaction, SavingsGoal, TrashItem };
 
 export const auth = {
-    signup: async (data: { username: string; email: string; password: string }) => {
-        // This will be called from the auth context
+    signup: async () => {
         throw new Error('Use AuthContext.signup instead');
     },
-    login: async (data: { email: string; password: string }) => {
-        // This will be called from the auth context
+    login: async () => {
         throw new Error('Use AuthContext.login instead');
     },
     me: async () => {
-        // This will be handled by AuthContext
         throw new Error('Use AuthContext instead');
     },
-    checkEmail: async (email: string) => {
+    checkEmail: async () => {
         const { checkEmailAvailability } = await import('./firebaseAuth');
-        return await checkEmailAvailability(email);
+        return await checkEmailAvailability();
     },
     checkUsername: async (username: string) => {
         const { checkUsernameAvailability } = await import('./firebaseAuth');
@@ -64,20 +61,16 @@ export const auth = {
         const { forgotPassword } = await import('./firebaseAuth');
         await forgotPassword(email);
     },
-    verifyResetCode: async (email: string, code: string) => {
-        // Firebase handles password reset via email link
+    verifyResetCode: async () => {
         throw new Error('Firebase uses email links for password reset');
     },
-    resetPassword: async (email: string, code: string, newPassword: string) => {
-        // Firebase handles password reset via email link
+    resetPassword: async () => {
         throw new Error('Firebase uses email links for password reset');
     },
-    updateProfileImage: async (profileImage: string) => {
-        // This will be called from the auth context
+    updateProfileImage: async () => {
         throw new Error('Use AuthContext.updateProfile instead');
     },
-    changePassword: async (currentPassword: string, newPassword: string) => {
-        // This will be called from the auth context
+    changePassword: async () => {
         throw new Error('Use AuthContext.updatePassword instead');
     },
 };
@@ -143,7 +136,9 @@ export const savingsGoals = {
         return await savingsGoalOperations.create({ 
             ...data, 
             userId,
+            current: data.current || 0,
             deletedAt: undefined,
+            _id: '', // Will be set by Firebase
         });
     },
     update: async (id: string, data: Partial<{ name: string; target: number; current: number; deadline: string }>) => {
@@ -176,19 +171,19 @@ export const admin = {
         // Admin functionality would need Firebase Admin SDK
         throw new Error('Admin functionality requires Firebase Admin SDK');
     },
-    deleteUser: async (id: string) => {
+    deleteUser: async (_id: string) => {
         throw new Error('Admin functionality requires Firebase Admin SDK');
     },
-    setRole: async (id: string, role: 'user' | 'admin') => {
+    setRole: async (_id: string, _role: 'user' | 'admin') => {
         throw new Error('Admin functionality requires Firebase Admin SDK');
     },
-    banUser: async (id: string, banned: boolean) => {
+    banUser: async (_id: string, _banned: boolean) => {
         throw new Error('Admin functionality requires Firebase Admin SDK');
     },
-    getUserStats: async (id: string) => {
+    getUserStats: async (_id: string) => {
         throw new Error('Admin functionality requires Firebase Admin SDK');
     },
-    getUserActivity: async (id: string) => {
+    getUserActivity: async (_id: string) => {
         throw new Error('Admin functionality requires Firebase Admin SDK');
     },
     stats: async () => {

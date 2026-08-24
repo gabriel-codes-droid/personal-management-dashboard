@@ -20,13 +20,9 @@ const timestampToIso = (timestamp: Timestamp | null): string => {
   return timestamp.toDate().toISOString();
 };
 
-// Helper to convert date to Firestore Timestamp (used for updates)
-const dateToTimestamp = (date: Date | string): Timestamp => {
-  return Timestamp.fromDate(typeof date === 'string' ? new Date(date) : date);
-};
-
 // MEAL OPERATIONS
 export interface Meal {
+  _id?: string;
   id: string;
   title: string;
   calories: number;
@@ -58,6 +54,7 @@ export const mealOperations = {
     );
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({
+      _id: doc.id,
       id: doc.id,
       ...doc.data(),
       createdAt: timestampToIso(doc.data().createdAt),
@@ -73,6 +70,7 @@ export const mealOperations = {
     });
     const docSnap = await getDoc(docRef);
     return {
+      _id: docRef.id,
       id: docRef.id,
       ...docSnap.data()!,
       createdAt: timestampToIso(docSnap.data()!.createdAt),
@@ -108,6 +106,7 @@ export const mealOperations = {
 
 // ACTIVITY OPERATIONS
 export interface Activity {
+  _id?: string;
   id: string;
   title: string;
   description: string;
@@ -132,6 +131,7 @@ export const activityOperations = {
     );
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({
+      _id: doc.id,
       id: doc.id,
       ...doc.data(),
       createdAt: timestampToIso(doc.data().createdAt),
@@ -147,6 +147,7 @@ export const activityOperations = {
     });
     const docSnap = await getDoc(docRef);
     return {
+      _id: docRef.id,
       id: docRef.id,
       ...docSnap.data()!,
       createdAt: timestampToIso(docSnap.data()!.createdAt),
@@ -182,6 +183,7 @@ export const activityOperations = {
 
 // TRANSACTION OPERATIONS
 export interface Transaction {
+  _id?: string;
   id: string;
   description: string;
   amount: number;
@@ -205,6 +207,7 @@ export const transactionOperations = {
     );
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({
+      _id: doc.id,
       id: doc.id,
       ...doc.data(),
       createdAt: timestampToIso(doc.data().createdAt),
@@ -220,6 +223,7 @@ export const transactionOperations = {
     });
     const docSnap = await getDoc(docRef);
     return {
+      _id: docRef.id,
       id: docRef.id,
       ...docSnap.data()!,
       createdAt: timestampToIso(docSnap.data()!.createdAt),
@@ -255,6 +259,7 @@ export const transactionOperations = {
 
 // SAVINGS GOAL OPERATIONS
 export interface SavingsGoal {
+  _id?: string;
   id: string;
   name: string;
   target: number;
@@ -278,6 +283,7 @@ export const savingsGoalOperations = {
     );
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({
+      _id: doc.id,
       id: doc.id,
       ...doc.data(),
       createdAt: timestampToIso(doc.data().createdAt),
@@ -293,6 +299,7 @@ export const savingsGoalOperations = {
     });
     const docSnap = await getDoc(docRef);
     return {
+      _id: docRef.id,
       id: docRef.id,
       ...docSnap.data()!,
       createdAt: timestampToIso(docSnap.data()!.createdAt),

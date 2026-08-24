@@ -82,8 +82,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await forgotPassword(email);
     }, []);
 
-    const checkEmail = useCallback(async (email: string) => {
-        return await checkEmailAvailability(email);
+    const checkEmail = useCallback(async () => {
+        return await checkEmailAvailability();
     }, []);
 
     const checkUsername = useCallback(async (username: string) => {

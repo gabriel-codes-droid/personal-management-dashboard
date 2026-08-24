@@ -6,10 +6,25 @@ import {
   User as FirebaseUser,
   updateProfile,
   updatePassword,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  getAuth
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, getFirestore } from 'firebase/firestore';
-import { getApp } from 'firebase/app';
+import { initializeApp, getApps } from 'firebase/app';
+
+// Initialize Firebase
+const app = !getApps().length ? initializeApp({
+  apiKey: "AIzaSyDd4ROtNet30GT3q--EkWLvrkS5Ozl7lsA",
+  authDomain: "personal-management-dash-9b45a.firebaseapp.com",
+  projectId: "personal-management-dash-9b45a",
+  storageBucket: "personal-management-dash-9b45a.firebasestorage.app",
+  messagingSenderId: "307938792813",
+  appId: "1:307938792813:web:693ea7372306750002b664",
+  measurementId: "G-ZY214MWF8F"
+}) : getApps()[0];
+
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 export interface User {
   uid: string;
@@ -93,7 +108,7 @@ export const signOut = async (): Promise<void> => {
 };
 
 // Check email availability
-export const checkEmailAvailability = async (email: string): Promise<boolean> => {
+export const checkEmailAvailability = async (): Promise<boolean> => {
   // Firebase Auth doesn't have a direct check-email endpoint
   // We'll assume email is available and handle duplicates during signup
   return true;

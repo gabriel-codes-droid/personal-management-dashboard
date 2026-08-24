@@ -72,7 +72,7 @@ function Admin() {
         setSelectedUser(user);
         setShowUserModal(true);
         try {
-            const { activities } = await admin.getUserActivity(user._id);
+            const { activities } = await admin.getUserActivity(user.uid);
             setUserActivities(activities);
         } catch {
             setUserActivities([]);
@@ -167,10 +167,10 @@ function Admin() {
                     </thead>
                     <tbody>
                         {filteredUsers.map(u => (
-                            <tr key={u._id}>
+                            <tr key={u.uid}>
                                 <td style={{ color: 'var(--text-0)', fontWeight: 500 }}>
                                     {u.username}
-                                    {u._id === currentUser?._id && <span className="badge info" style={{ marginLeft: 8 }}>you</span>}
+                                    {u.uid === currentUser?.uid && <span className="badge info" style={{ marginLeft: 8 }}>you</span>}
                                 </td>
                                 <td className="muted">{u.email}</td>
                                 <td>
@@ -193,24 +193,24 @@ function Admin() {
                                     <div className="row gap-sm" style={{ justifyContent: 'flex-end' }}>
                                         <button
                                             className="btn ghost sm"
-                                            onClick={() => toggleBan(u._id, u.username, u.banned || false)}
-                                            disabled={u._id === currentUser?._id}
+                                            onClick={() => toggleBan(u.uid, u.username, u.banned || false)}
+                                            disabled={u.uid === currentUser?.uid}
                                             title={u.banned ? 'Unban user' : 'Ban user'}
                                         >
                                             {u.banned ? '🔓 Unban' : '🚫 Ban'}
                                         </button>
                                         <button
                                             className="btn ghost sm"
-                                            onClick={() => setRole(u._id, u.role === 'admin' ? 'user' : 'admin')}
-                                            disabled={u._id === currentUser?._id}
+                                            onClick={() => setRole(u.uid, u.role === 'admin' ? 'user' : 'admin')}
+                                            disabled={u.uid === currentUser?.uid}
                                             title={u.role === 'admin' ? 'Demote to user' : 'Promote to admin'}
                                         >
                                             {u.role === 'admin' ? 'Demote' : 'Promote'}
                                         </button>
                                         <button
                                             className="btn danger sm"
-                                            onClick={() => removeUser(u._id, u.email)}
-                                            disabled={u._id === currentUser?._id || u.role === 'admin'}
+                                            onClick={() => removeUser(u.uid, u.email)}
+                                            disabled={u.uid === currentUser?.uid || u.role === 'admin'}
                                             title="Delete user and all data"
                                         >
                                             Delete
@@ -274,11 +274,11 @@ function Admin() {
 
                         <div className="row gap-sm mt-md" style={{ justifyContent: 'flex-end' }}>
                             <button className="btn ghost" onClick={() => setShowUserModal(false)}>Close</button>
-                            {selectedUser._id !== currentUser?._id && (
+                            {selectedUser.uid !== currentUser?.uid && (
                                 <button 
                                     className="btn primary"
                                     onClick={() => {
-                                        setRole(selectedUser._id, selectedUser.role === 'admin' ? 'user' : 'admin');
+                                        setRole(selectedUser.uid, selectedUser.role === 'admin' ? 'user' : 'admin');
                                         setShowUserModal(false);
                                     }}
                                 >

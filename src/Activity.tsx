@@ -127,7 +127,7 @@ function Activity() {
     const renderCard = (a: Activity) => {
         const s = getStatus(a);
         return (
-            <div key={a._id} className="activity-card">
+            <div key={a.id} className="activity-card">
                 <div className="row between">
                     <div className="title">{a.title}</div>
                     <span className={'badge ' + s.color}><span className="dot"></span>{s.label}</span>
@@ -135,8 +135,8 @@ function Activity() {
                 <div style={{ color: 'var(--text-2)', fontSize: 11, margin: '4px 0' }}>{a.description}</div>
                 <div className="meta">🕐 {new Date(a.startTime).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
                 <div className="row gap-sm mt-sm">
-                    {!a.done && <button className="btn success sm" onClick={() => markDone(a._id)}>✓ Done</button>}
-                    <button className="btn ghost sm" onClick={() => removeActivity(a._id)}>✕</button>
+                    {!a.done && <button className="btn success sm" onClick={() => markDone(a.id)}>✓ Done</button>}
+                    <button className="btn ghost sm" onClick={() => removeActivity(a.id)}>✕</button>
                 </div>
             </div>
         );

@@ -110,11 +110,12 @@ function Finance() {
     };
 
     const addFunds = async (goal: SavingsGoal) => {
-        const amt = Number(fundInputs[goal._id]);
+        const goalId = goal._id || goal.id;
+        const amt = Number(fundInputs[goalId]);
         if (!amt || amt <= 0) return;
         try {
-            await goalsApi.update(goal._id, { current: goal.current + amt });
-            setFundInputs(prev => ({ ...prev, [goal._id]: '' }));
+            await goalsApi.update(goalId, { current: goal.current + amt });
+            setFundInputs(prev => ({ ...prev, [goalId]: '' }));
             await reloadGoals();
         } catch {
             setGoalError('Failed to update savings goal.');
@@ -411,10 +412,10 @@ function Finance() {
                                 ? Math.max(0, Math.ceil((new Date(g.deadline).getTime() - Date.now()) / 86400000))
                                 : null;
                             return (
-                                <div key={g._id} className="card" style={{ background: 'var(--surface-1)' }}>
+                                <div key={g._id || g.id} className="card" style={{ background: 'var(--surface-1)' }}>
                                     <div className="card-header">
                                         <div className="card-title" style={{ fontSize: 15 }}>{g.name}</div>
-                                        <button className="btn ghost sm" onClick={() => removeGoal(g._id)}>✕</button>
+                                        <button className="btn ghost sm" onClick={() => removeGoal(g._id || g.id)}>✕</button>
                                     </div>
                                     <div className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
                                         ${g.current.toFixed(2)} of ${g.target.toFixed(2)}
@@ -429,8 +430,8 @@ function Finance() {
                                                 className="input"
                                                 type="number"
                                                 placeholder="Add funds"
-                                                value={fundInputs[g._id] || ''}
-                                                onChange={e => setFundInputs(prev => ({ ...prev, [g._id]: e.target.value }))}
+                                                value={fundInputs[g._id || g.id] || ''}
+                                                onChange={e => setFundInputs(prev => ({ ...prev, [g._id || g.id]: e.target.value }))}
                                             />
                                         </div>
                                         <div className="field" style={{ justifyContent: 'flex-end' }}>
@@ -495,7 +496,7 @@ function Finance() {
                                         {t.amount >= 0 ? '+' : ''}${Math.abs(t.amount).toFixed(2)}
                                     </td>
                                     <td>
-                                        <button className="btn ghost sm" onClick={() => removeTransaction(t._id)}>✕</button>
+                                        <button className="btn ghost sm" onClick={() => removeTransaction(t._id || t.id)}>✕</button>
                                     </td>
                                 </tr>
                             ))}
