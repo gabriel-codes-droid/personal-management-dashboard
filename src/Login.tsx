@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from './auth';
 import { useTheme } from './theme';
 import { validateEmail } from './validation';
+import { getFirebaseErrorMessage } from './firebaseErrorHandler';
 
 function Login() {
     const navigate = useNavigate();
@@ -33,7 +34,7 @@ function Login() {
             await login(email.trim(), password);
             navigate('/', { replace: true });
         } catch (err: any) {
-            setError(err.message || 'Login failed. Please try again.');
+            setError(getFirebaseErrorMessage(err));
         } finally {
             setLoading(false);
         }

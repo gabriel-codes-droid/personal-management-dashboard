@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { trash as trashApi, TrashItem } from './api';
+import { getFirebaseErrorMessage } from './firebaseErrorHandler';
 
 const TYPE_LABEL: Record<TrashItem['itemType'], string> = {
     transaction: 'Transaction',
@@ -23,8 +24,9 @@ function Trash() {
         try {
             const data = await trashApi.list();
             setItems(data);
-        } catch {
-            setError('Failed to load trash.');
+            setError('');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
     };
 
@@ -40,8 +42,8 @@ function Trash() {
         try {
             await trashApi.restore(item.itemType, item.id);
             await reload();
-        } catch {
-            setError('Failed to restore item.');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         } finally {
             setBusyId(null);
         }
@@ -52,8 +54,8 @@ function Trash() {
         try {
             await trashApi.remove(item.itemType, item.id);
             await reload();
-        } catch {
-            setError('Failed to permanently delete item.');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         } finally {
             setBusyId(null);
         }
@@ -65,8 +67,8 @@ function Trash() {
         try {
             await trashApi.empty();
             await reload();
-        } catch {
-            setError('Failed to empty trash.');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
     };
 

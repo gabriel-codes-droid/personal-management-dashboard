@@ -349,45 +349,52 @@ export const trashOperations = {
     const allItems: TrashItem[] = [];
     
     for (const coll of collections) {
-      const q = query(
-        collection(db, coll),
-        where('userId', '==', userId),
-        where('deletedAt', '!=', null),
-        orderBy('deletedAt', 'desc')
-      );
-      const snapshot = await getDocs(q);
-      
-      const items = snapshot.docs.map(doc => {
-        const data = doc.data();
-        let itemType: TrashItem['itemType'];
-        let title: string;
-        let details: string;
+      try {
+        // Query for items where deletedAt exists (is not null)
+        const q = query(
+          collection(db, coll),
+          where('userId', '==', userId),
+          orderBy('deletedAt', 'desc')
+        );
+        const snapshot = await getDocs(q);
         
-        if (coll === 'transactions') {
-          itemType = 'transaction';
-          title = data.description;
-          details = `${data.type === 'income' ? '+' : '-'}$${data.amount}`;
-        } else if (coll === 'meals') {
-          itemType = 'meal';
-          title = data.title;
-          details = `${data.calories} kcal`;
-        } else {
-          itemType = 'activity';
-          title = data.title;
-          details = data.description;
-        }
+        const items = snapshot.docs
+          .filter(doc => doc.data().deletedAt !== null && doc.data().deletedAt !== undefined)
+          .map(doc => {
+            const data = doc.data();
+            let itemType: TrashItem['itemType'];
+            let title: string;
+            let details: string;
+            
+            if (coll === 'transactions') {
+              itemType = 'transaction';
+              title = data.description;
+              details = `${data.type === 'income' ? '+' : '-'}$${data.amount}`;
+            } else if (coll === 'meals') {
+              itemType = 'meal';
+              title = data.title;
+              details = `${data.calories} kcal`;
+            } else {
+              itemType = 'activity';
+              title = data.title;
+              details = data.description;
+            }
+            
+            return {
+              id: doc.id,
+              itemType,
+              title,
+              details,
+              deletedAt: timestampToIso(data.deletedAt),
+              userId,
+            };
+          });
         
-        return {
-          id: doc.id,
-          itemType,
-          title,
-          details,
-          deletedAt: timestampToIso(data.deletedAt),
-          userId,
-        };
-      });
-      
-      allItems.push(...items);
+        allItems.push(...items);
+      } catch (error) {
+        console.error(`Error fetching trash from ${coll}:`, error);
+        // Continue with other collections even if one fails
+      }
     }
     
     return allItems.sort((a, b) => new Date(b.deletedAt).getTime() - new Date(a.deletedAt).getTime());

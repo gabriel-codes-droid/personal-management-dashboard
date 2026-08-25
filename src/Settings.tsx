@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from './auth';
 import { useTheme } from './theme';
+import { getFirebaseErrorMessage } from './firebaseErrorHandler';
 
 const convertToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -72,7 +73,7 @@ export default function Settings() {
             await updateProfile(profileImage);
             setProfileMessage({ type: 'success', text: 'Profile image updated successfully' });
         } catch (error: any) {
-            setProfileMessage({ type: 'error', text: error.message || 'Failed to update profile image' });
+            setProfileMessage({ type: 'error', text: getFirebaseErrorMessage(error) });
         } finally {
             setSavingProfile(false);
         }
@@ -97,7 +98,7 @@ export default function Settings() {
             setNewPassword('');
             setConfirmPassword('');
         } catch (error: any) {
-            setPasswordMessage({ type: 'error', text: error.message || 'Failed to change password' });
+            setPasswordMessage({ type: 'error', text: getFirebaseErrorMessage(error) });
         } finally {
             setChangingPassword(false);
         }
@@ -111,7 +112,7 @@ export default function Settings() {
             setResetStep('success');
             setResetMessage({ type: 'success', text: 'Password reset email sent. Check your inbox.' });
         } catch (error: any) {
-            setResetMessage({ type: 'error', text: error.message || 'Failed to send reset email' });
+            setResetMessage({ type: 'error', text: getFirebaseErrorMessage(error) });
         } finally {
             setResettingPassword(false);
         }

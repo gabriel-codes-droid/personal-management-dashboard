@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from './auth';
 import { useTheme } from './theme';
 import { validateUsername, validateEmail, validatePassword, passwordStrength, PasswordStrength } from './validation';
+import { getFirebaseErrorMessage } from './firebaseErrorHandler';
 
 type AvailabilityStatus = 'unknown' | 'checking' | 'available' | 'taken';
 
@@ -95,16 +96,7 @@ function Signup() {
             await signup(username.trim(), email.trim(), password);
             navigate('/', { replace: true });
         } catch (err: any) {
-            // Firebase errors have code and message properties
-            const reason = err.message || 'Signup failed. Please try again.';
-            setError(reason);
-            // Handle Firebase-specific error codes
-            if (err.code === 'auth/email-already-in-use') {
-                setFieldErrors(f => ({ ...f, email: 'This email is already registered.' }));
-                setEmailStatus('taken');
-            } else if (err.code === 'auth/weak-password') {
-                setFieldErrors(f => ({ ...f, password: 'Password is too weak.' }));
-            }
+            setError(getFirebaseErrorMessage(err));
         } finally {
             setLoading(false);
         }
