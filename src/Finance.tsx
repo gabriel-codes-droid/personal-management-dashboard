@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { transactions as txApi, Transaction, savingsGoals as goalsApi, SavingsGoal } from './api';
+import { getFirebaseErrorMessage } from './firebaseErrorHandler';
 import {
     AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, CartesianGrid, BarChart, Bar, LineChart, Line
@@ -70,8 +71,8 @@ function Finance() {
         try {
             const data = await txApi.list();
             setTransactions(data);
-        } catch {
-            setError('Failed to load transactions.');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
     };
 
@@ -79,8 +80,8 @@ function Finance() {
         try {
             const data = await goalsApi.list();
             setGoals(data);
-        } catch {
-            setGoalError('Failed to load savings goals.');
+        } catch (err: any) {
+            setGoalError(getFirebaseErrorMessage(err));
         }
     };
 
@@ -104,8 +105,8 @@ function Finance() {
             setGoalTarget('');
             setGoalDeadline('');
             await reloadGoals();
-        } catch {
-            setGoalError('Failed to add savings goal.');
+        } catch (err: any) {
+            setGoalError(getFirebaseErrorMessage(err));
         }
     };
 
@@ -117,8 +118,8 @@ function Finance() {
             await goalsApi.update(goalId, { current: goal.current + amt });
             setFundInputs(prev => ({ ...prev, [goalId]: '' }));
             await reloadGoals();
-        } catch {
-            setGoalError('Failed to update savings goal.');
+        } catch (err: any) {
+            setGoalError(getFirebaseErrorMessage(err));
         }
     };
 
@@ -126,8 +127,8 @@ function Finance() {
         try {
             await goalsApi.remove(id);
             await reloadGoals();
-        } catch {
-            setGoalError('Failed to delete savings goal.');
+        } catch (err: any) {
+            setGoalError(getFirebaseErrorMessage(err));
         }
     };
 
@@ -151,8 +152,8 @@ function Finance() {
         try {
             await txApi.remove(id);
             await reload();
-        } catch {
-            setError('Failed to delete transaction.');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
     };
 

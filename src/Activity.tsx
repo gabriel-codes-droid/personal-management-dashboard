@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { activities as actApi, type Activity } from './api';
+import { getFirebaseErrorMessage } from './firebaseErrorHandler';
 
 function Activity() {
     const [mode, setMode] = useState<'schedule' | 'countdown'>('schedule');
@@ -21,8 +22,8 @@ function Activity() {
         try {
             const data = await actApi.list();
             setActivities(data);
-        } catch {
-            setError('Failed to load activities.');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
     };
 
@@ -90,7 +91,7 @@ function Activity() {
             setTitle(''); setDescription(''); setStartTime(''); setEndTime('');
             await reload();
         } catch (e: any) {
-            setError(e.response?.data?.message || 'Failed to add activity.');
+            setError(getFirebaseErrorMessage(e));
         }
     };
 
@@ -98,8 +99,8 @@ function Activity() {
         try {
             await actApi.update(id, { done: true });
             await reload();
-        } catch {
-            setError('Failed to update activity.');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
     };
 
@@ -107,8 +108,8 @@ function Activity() {
         try {
             await actApi.remove(id);
             await reload();
-        } catch {
-            setError('Failed to delete activity.');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
     };
 

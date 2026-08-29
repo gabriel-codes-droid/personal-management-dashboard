@@ -1,12 +1,11 @@
 // Service Worker for Push Notifications
-const CACHE_NAME = 'pmd-v2';
+const CACHE_NAME = 'pmd-v3';
 const urlsToCache = [
-    '/',
-    '/index.html',
     '/vite.svg'
 ];
 
 self.addEventListener('install', (event) => {
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => cache.addAll(urlsToCache))
@@ -16,7 +15,31 @@ self.addEventListener('install', (event) => {
     );
 });
 
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys()
+            .then((keys) => Promise.all(
+                keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+            ))
+            .then(() => self.clients.claim())
+    );
+});
+
 self.addEventListener('fetch', (event) => {
+    // Never cache navigation/HTML requests or JS/CSS module scripts — always
+    // go to the network so users get the current build's index.html and
+    // hashed asset filenames. Falling back to a stale cached index.html
+    // after a new deploy causes "Expected a JavaScript module" MIME errors,
+    // because it references JS/CSS files that no longer exist on the server.
+    if (
+        event.request.mode === 'navigate' ||
+        event.request.destination === 'script' ||
+        event.request.destination === 'style'
+    ) {
+        event.respondWith(fetch(event.request));
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request)
             .then((response) => {

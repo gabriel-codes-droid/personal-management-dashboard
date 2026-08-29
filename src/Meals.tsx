@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { meals as mealApi, Meal } from './api';
+import { getFirebaseErrorMessage } from './firebaseErrorHandler';
 import {
     PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid
 } from 'recharts';
@@ -72,8 +73,9 @@ function Meals() {
         try {
             const data = await mealApi.list();
             setMeals(data);
-        } catch {
-            setError('Failed to load meals.');
+            setError('');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
     };
 
@@ -193,8 +195,8 @@ function Meals() {
             } else {
                 setError('Product not found with this barcode.');
             }
-        } catch {
-            setError('Failed to fetch product data. Check the barcode and try again.');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
         setLoadingSearch(false);
     };
@@ -219,8 +221,8 @@ function Meals() {
             setQuery('');
             setSelectedProduct(null);
             await reload();
-        } catch {
-            setError('Failed to add meal.');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
     };
 
@@ -242,8 +244,8 @@ function Meals() {
             setManualCarbs('');
             setManualFat('');
             await reload();
-        } catch {
-            setError('Failed to add meal.');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
     };
 
@@ -284,8 +286,8 @@ function Meals() {
             setDishName('');
             setIngredients([]);
             await reload();
-        } catch {
-            setError('Failed to add dish.');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
     };
 
@@ -293,8 +295,8 @@ function Meals() {
         try {
             await mealApi.remove(id);
             await reload();
-        } catch {
-            setError('Failed to delete meal.');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
     };
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { admin, User, AdminStats } from './api';
 import { useAuth } from './auth';
+import { getFirebaseErrorMessage } from './firebaseErrorHandler';
 
 interface UserActivity {
     userId: string;
@@ -26,8 +27,8 @@ function Admin() {
             const [u, s] = await Promise.all([admin.listUsers(), admin.stats()]);
             setUsers(u);
             setStats(s);
-        } catch {
-            setError('Failed to load admin data.');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
     };
 
@@ -42,8 +43,8 @@ function Admin() {
         try {
             await admin.setRole(id, role);
             await reload();
-        } catch {
-            setError('Failed to update role.');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
     };
 
@@ -52,8 +53,8 @@ function Admin() {
         try {
             await admin.deleteUser(id);
             await reload();
-        } catch (e: any) {
-            setError(e.response?.data?.message || 'Failed to delete user.');
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
     };
 
@@ -63,8 +64,8 @@ function Admin() {
         try {
             await admin.banUser(id, !currentBanned);
             await reload();
-        } catch (e: any) {
-            setError(e.response?.data?.message || `Failed to ${action} user.`);
+        } catch (err: any) {
+            setError(getFirebaseErrorMessage(err));
         }
     };
 
