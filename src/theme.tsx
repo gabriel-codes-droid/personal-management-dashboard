@@ -32,7 +32,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         }
     }, [theme]);
 
-    const toggle = () => setTheme(t => (t === 'dark' ? 'light' : 'dark'));
+    const toggle = () => {
+        // Create theme transition overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'theme-transition-overlay';
+        overlay.style.background = theme === 'dark' ? '#ffffff' : '#09090b';
+        document.body.appendChild(overlay);
+
+        // Change theme after slight delay
+        setTimeout(() => {
+            setTheme(t => (t === 'dark' ? 'light' : 'dark'));
+        }, 50);
+
+        // Remove overlay after animation
+        setTimeout(() => {
+            overlay.remove();
+        }, 600);
+    };
 
     return (
         <ThemeContext.Provider value={{ theme, toggle, setTheme }}>

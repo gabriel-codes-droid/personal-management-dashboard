@@ -3,6 +3,16 @@ import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, useNaviga
 import { AuthProvider, useAuth } from './auth';
 import { ThemeProvider, useTheme } from './theme';
 import { AppNotification } from './api';
+import { 
+  LayoutDashboard, 
+  DollarSign, 
+  Utensils, 
+  Activity as ActivityIcon, 
+  Bell, 
+  Trash2, 
+  Settings as SettingsIcon,
+  Shield
+} from 'lucide-react';
 import Home from './Home';
 import Finance from './Finance';
 import Meals from './Meals';
@@ -35,9 +45,9 @@ function Sidebar({ open }: { open: boolean }) {
     const unread = notifications.filter(n => !n.read).length;
     const { user } = useAuth();
 
-    const link = (to: string, icon: string, label: string, badge?: number) => (
+    const link = (to: string, Icon: any, label: string, badge?: number) => (
         <NavLink to={to} end={to === '/'} className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
-            <span className="icon">{icon}</span>
+            <Icon size={20} className="icon" />
             <span>{label}</span>
             {badge && badge > 0 && <span className="badge">{badge}</span>}
         </NavLink>
@@ -54,24 +64,24 @@ function Sidebar({ open }: { open: boolean }) {
             </div>
 
             <div className="sidebar-label">Overview</div>
-            {link('/', '📊', 'Dashboard')}
+            {link('/', LayoutDashboard, 'Dashboard')}
 
             <div className="sidebar-label">Modules</div>
-            {link('/finance', '💰', 'Finance')}
-            {link('/meals', '🍽️', 'Meals')}
-            {link('/activity', '🏃', 'Activity')}
+            {link('/finance', DollarSign, 'Finance')}
+            {link('/meals', Utensils, 'Meals')}
+            {link('/activity', ActivityIcon, 'Activity')}
 
             {user?.role === 'admin' && (
                 <>
                     <div className="sidebar-label">Admin</div>
-                    {link('/admin', '🔧', 'Admin Panel')}
+                    {link('/admin', Shield, 'Admin Panel')}
                 </>
             )}
 
             <div className="sidebar-label">System</div>
-            {link('/notifications', '🔔', 'Notifications', unread)}
-            {link('/trash', '🗑️', 'Trash')}
-            {link('/settings', '⚙️', 'Settings')}
+            {link('/notifications', Bell, 'Notifications', unread)}
+            {link('/trash', Trash2, 'Trash')}
+            {link('/settings', SettingsIcon, 'Settings')}
 
             <div className="sidebar-footer">v1.0 · Synced to backend</div>
         </aside>
