@@ -85,13 +85,13 @@
 
 html[data-theme="dark"] {
   /* Warm shadcn-inspired theme - Dark Mode */
-  --background: #1c1917;
+  --background: #000000;
   --foreground: #fafaf9;
 
-  --card: #1c1917;
+  --card: #0a0a0a;
   --card-foreground: #fafaf9;
 
-  --popover: #1c1917;
+  --popover: #0a0a0a;
   --popover-foreground: #fafaf9;
 
   --primary: #fafaf9;
@@ -114,12 +114,12 @@ html[data-theme="dark"] {
   --ring: #a8a29e;
 
   /* Surface mapping - warm dark stone */
-  --bg-0: #1c1917;
-  --bg-1: #1c1917;
-  --bg-2: #292524;
-  --bg-3: #44403c;
-  --bg-elevated: #292524;
-  --border: #292524;
+  --bg-0: #000000;
+  --bg-1: #050505;
+  --bg-2: #0f0f0f;
+  --bg-3: #1f1f1f;
+  --bg-elevated: #0a0a0a;
+  --border: #242424;
   --border-strong: #57534e;
 
   /* Text - warm off-white */
@@ -151,6 +151,91 @@ body {
   background: var(--bg-0);
   color: var(--text-0);
   transition: background-color 0.3s ease, color 0.3s ease;
+  font-size: 16px;
+}
+
+/* Typography scaling — slight bump across the board */
+h1, h2, h3, h4, h5 {
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.section-title {
+  font-size: clamp(1.35rem, 2.3vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.btn {
+  font-size: 0.9375rem;
+  line-height: 1.25;
+  padding: 0.625rem 1.25rem;
+}
+
+.btn.sm {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+}
+
+.nav-link {
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  font-weight: 600;
+}
+
+.kpi-value {
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.kpi-label {
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.card-sub {
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.section-sub {
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.form-label,
+label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.input {
+  font-size: 0.9375rem;
+}
+
+.form-error {
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.nav-sub {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 /* Theme switch animation from center */
@@ -257,22 +342,8 @@ html[data-theme="light"] body {
   .kpi-value {
     font-size: 20px;
   }
-  .section-title {
-    font-size: 14px;
-  }
-  .section-sub {
-    font-size: 11px;
-  }
   .card {
     padding: 16px;
-  }
-  .btn {
-    padding: 6px 12px;
-    font-size: 12px;
-  }
-  .input, .select {
-    padding: 8px 10px;
-    font-size: 12px;
   }
   .tabs {
     flex-direction: column;
@@ -304,15 +375,8 @@ html[data-theme="light"] body {
     height: 28px;
     font-size: 10px;
   }
-  .topbar h1 {
-    font-size: 16px;
-  }
   .sidebar-footer {
     font-size: 10px;
-  }
-  .btn.sm {
-    padding: 4px 8px;
-    font-size: 11px;
   }
   .recharts-wrapper {
     height: 200px;
@@ -421,6 +485,27 @@ html[data-theme="light"] body {
   .auth-card {
     padding: 24px;
   }
+}
+
+/* Keep the type scale stable across viewport sizes and auth screens. */
+body { font-size: 16px; }
+.section-title { font-size: 18px; }
+.section-sub { font-size: 12px; }
+.card-title { font-size: 14px; }
+.card-sub { font-size: 12px; }
+.btn { font-size: 13px; }
+.input, .select, .textarea { font-size: 13px; }
+.topbar h1 { font-size: 20px; }
+.auth-shell { background: var(--bg-0); color: var(--text-0); }
+.auth-card { background: var(--card); }
+
+@media (max-width: 480px) {
+  .section-title { font-size: 18px; }
+  .section-sub { font-size: 12px; }
+  .btn { font-size: 13px; }
+  .input, .select, .textarea { font-size: 13px; }
+  .topbar h1 { font-size: 20px; }
+  .btn.sm { font-size: 12px; }
 }
 
 * {

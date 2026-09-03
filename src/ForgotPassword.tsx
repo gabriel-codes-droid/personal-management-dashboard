@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { auth } from './api';
 import { useTheme } from './theme';
 import { validateEmail, validatePassword, passwordStrength } from './validation';
+import { Eye, EyeOff, Sun, Moon } from 'lucide-react';
 
 type Step = 'email' | 'code' | 'password' | 'done';
 
@@ -81,7 +82,7 @@ function ForgotPassword() {
     return (
         <div className="auth-shell">
             <button className="theme-btn auth-theme-toggle" onClick={toggle} aria-label="Toggle theme" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
-                {theme === 'dark' ? '☀' : '☾'}
+                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <div className="auth-card">
                 <div className="auth-brand">
@@ -177,7 +178,7 @@ function ForgotPassword() {
                                         onClick={() => setShowPassword(s => !s)}
                                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                                     >
-                                        {showPassword ? '🙈' : '👁'}
+                                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                     </button>
                                 </div>
                                 {password && (
