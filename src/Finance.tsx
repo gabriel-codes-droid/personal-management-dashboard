@@ -5,16 +5,20 @@ import {
     AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, CartesianGrid, BarChart, Bar, LineChart, Line
 } from 'recharts';
+import {
+  Briefcase, ChefHat, Car, ShoppingBag, FileText, Film, Heart, Circle,
+  TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight,
+} from 'lucide-react';
 
 const CATS = [
-    { key: 'salary', label: 'Salary', icon: '◐' },
-    { key: 'food', label: 'Food', icon: '◉' },
-    { key: 'transport', label: 'Transport', icon: '◊' },
-    { key: 'shopping', label: 'Shopping', icon: '◈' },
-    { key: 'bills', label: 'Bills', icon: '◍' },
-    { key: 'entertainment', label: 'Entertainment', icon: '◯' },
-    { key: 'health', label: 'Health', icon: '◑' },
-    { key: 'other', label: 'Other', icon: '○' },
+    { key: 'salary', label: 'Salary', icon: <Briefcase size={14} /> },
+    { key: 'food', label: 'Food', icon: <ChefHat size={14} /> },
+    { key: 'transport', label: 'Transport', icon: <Car size={14} /> },
+    { key: 'shopping', label: 'Shopping', icon: <ShoppingBag size={14} /> },
+    { key: 'bills', label: 'Bills', icon: <FileText size={14} /> },
+    { key: 'entertainment', label: 'Entertainment', icon: <Film size={14} /> },
+    { key: 'health', label: 'Health', icon: <Heart size={14} /> },
+    { key: 'other', label: 'Other', icon: <Circle size={14} /> },
 ];
 
 const last7Days = (): string[] => {
@@ -221,7 +225,7 @@ function Finance() {
 
             <div className="grid grid-3 mb-md">
                 <div className="kpi finance">
-                    <div className="kpi-icon">◆</div>
+                    <div className="kpi-icon"><Circle size={18} /></div>
                     <div className="kpi-label">Balance</div>
                     <div className="kpi-value" style={{ color: totalBalance >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                         ${Math.abs(totalBalance).toFixed(2)}
@@ -229,7 +233,7 @@ function Finance() {
                     <div className="kpi-sub muted">{transactions.length} transactions</div>
                 </div>
                 <div className="kpi accent">
-                    <div className="kpi-icon" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}>↗</div>
+                    <div className="kpi-icon" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}><ArrowUpRight size={18} /></div>
                     <div className="kpi-label">Income</div>
                     <div className="kpi-value" style={{ color: 'var(--success)' }}>+${totalIncome.toFixed(2)}</div>
                     <div className="kpi-sub muted">

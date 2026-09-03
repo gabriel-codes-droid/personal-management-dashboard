@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  Circle, Square, Moon, ArrowUpRight, ArrowDownRight, Check, Clock,
+} from 'lucide-react';
 import { transactions as txApi, meals as mealApi, activities as actApi, Transaction, Meal, Activity, AppNotification } from './api';
 import { notificationService } from './notificationService';
 import {
@@ -151,17 +154,17 @@ function Home() {
 
     const feed = [
         ...transactions.slice(0, 5).map(t => ({
-            type: 'finance', icon: t.amount >= 0 ? '↗' : '↘',
+        type: 'finance', icon: t.amount >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />,
             text: t.description || (t.amount >= 0 ? 'Income' : 'Expense'),
             meta: (t.amount >= 0 ? '+' : '') + '$' + t.amount,
             color: t.amount >= 0 ? success : danger,
             ts: new Date(t.createdAt).getTime()
         })),
         ...meals.slice(0, 5).map(m => ({
-            type: 'meals', icon: '◉', text: m.title, meta: m.calories + ' kcal', color: mealsColor, ts: new Date(m.createdAt).getTime()
+            type: 'meals', icon: <Circle size={14} />, text: m.title, meta: m.calories + ' kcal', color: mealsColor, ts: new Date(m.createdAt).getTime()
         })),
         ...activities.slice(0, 5).map(a => ({
-            type: 'activity', icon: a.done ? '✓' : '◷',
+            type: 'activity', icon: a.done ? <Check size={14} /> : <Clock size={14} />,
             text: a.title, meta: a.done ? 'Done' : 'Pending', color: a.done ? success : warning, ts: new Date(a.createdAt).getTime()
         })),
     ].sort((a, b) => b.ts - a.ts).slice(0, 8);
@@ -184,7 +187,7 @@ function Home() {
 
             <div className="grid grid-4 mb-md">
                 <div className="kpi finance">
-                    <div className="kpi-icon">◆</div>
+                    <div className="kpi-icon"><Circle size={18} /></div>
                     <div className="kpi-label">Total Balance</div>
                     <div className="kpi-value" style={{ color: totalBalance >= 0 ? success : danger }}>
                         ${Math.abs(totalBalance).toFixed(2)}
@@ -197,7 +200,7 @@ function Home() {
                 </div>
 
                 <div className="kpi meals">
-                    <div className="kpi-icon">◉</div>
+                    <div className="kpi-icon"><Circle size={18} /></div>
                     <div className="kpi-label">Calories Today</div>
                     <div className="kpi-value">{totalCals}</div>
                     <div className="kpi-sub">
@@ -209,7 +212,7 @@ function Home() {
                 </div>
 
                 <div className="kpi activity">
-                    <div className="kpi-icon">▣</div>
+                    <div className="kpi-icon"><Square size={18} /></div>
                     <div className="kpi-label">Activities</div>
                     <div className="kpi-value">{doneActivities}<span className="muted" style={{ fontSize: 16, fontWeight: 500 }}> / {activities.length}</span></div>
                     <div className="kpi-sub">
@@ -220,7 +223,7 @@ function Home() {
                 </div>
 
                 <div className="kpi accent">
-                    <div className="kpi-icon">◐</div>
+                        <div className="kpi-icon"><Moon size={18} /></div>
                     <div className="kpi-label">Income · Expense</div>
                     <div className="kpi-value" style={{ fontSize: 18, display: 'flex', gap: 12, alignItems: 'baseline' }}>
                         <span style={{ color: success }}>+${totalIncome.toFixed(0)}</span>
@@ -267,7 +270,7 @@ function Home() {
                     </div>
                     <div ref={chart2Ref} style={{ width: '100%', height: 240 }}>
                         {categoryData.length === 0 ? (
-                            <div className="empty"><div className="empty-icon">○</div>No transactions yet.</div>
+                            <div className="empty"><div className="empty-icon"><Circle size={24} /></div>No transactions yet.</div>
                         ) : (
                             <ResponsiveContainer width={chart2Size.width} height={chart2Size.height}>
                                 <PieChart>
@@ -340,7 +343,7 @@ function Home() {
                     </div>
                 </div>
                 {feed.length === 0 ? (
-                    <div className="empty"><div className="empty-icon">○</div>Nothing yet. Add a transaction, meal, or activity to get started.</div>
+                    <div className="empty"><div className="empty-icon"><Circle size={24} /></div>Nothing yet. Add a transaction, meal, or activity to get started.</div>
                 ) : (
                     <table className="table">
                         <thead>
