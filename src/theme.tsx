@@ -36,7 +36,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         // Create theme transition overlay
         const overlay = document.createElement('div');
         overlay.className = 'theme-transition-overlay';
-        overlay.background = theme === 'dark' ? '#fafaf9' : '#1c1917';
+        overlay.style.background = theme === 'dark' ? '#fafaf9' : '#1c1917';
         document.body.appendChild(overlay);
 
         // Change theme after slight delay

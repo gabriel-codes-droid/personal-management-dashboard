@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import {
   Briefcase, ChefHat, Car, ShoppingBag, FileText, Film, Heart, Circle,
-  TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight,
+  ArrowUpRight,
 } from 'lucide-react';
 
 const CATS = [

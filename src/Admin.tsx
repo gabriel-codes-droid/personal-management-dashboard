@@ -1,6 +1,5 @@
 import {
-  Eye, X, Users, Ban, CheckCircle2, ClipboardList,
-  DollarSign, ChefHat, Square,
+  Eye, X, Ban, CheckCircle2, ClipboardList, Lock,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { admin, User, AdminStats } from './api';
@@ -249,7 +248,7 @@ function Admin() {
                                             disabled={u.uid === currentUser?.uid}
                                             title={u.banned ? 'Unban user' : 'Ban user'}
                                         >
-                                            {u.banned ? <><Unlock size={14} className="inline mr-1" /> Unban</> : <><Ban size={14} className="inline mr-1" /> Ban</>}
+                                            {u.banned ? <><Lock size={14} className="inline mr-1" /> Unban</> : <><Ban size={14} className="inline mr-1" /> Ban</>}
                                         </button>
                                         <button
                                             className="btn ghost sm"
