@@ -10,12 +10,11 @@ import {
   Scan,
   Edit,
   Utensils,
-  Sun,
-  Moon,
-  Cookie,
   Carrot,
   Circle,
   Leaf,
+  Flame,
+  X,
 } from 'lucide-react';
 
 const DAILY_TARGET = 2000;
@@ -363,7 +362,7 @@ function Meals() {
 
             <div className="grid grid-4 mb-md">
                 <div className="kpi meals">
-                    <div className="kpi-icon">◉</div>
+                    <div className="kpi-icon"><Flame size={16} /></div>
                     <div className="kpi-label">Today</div>
                     <div className="kpi-value">{totalCalories}<span className="muted" style={{ fontSize: 14, fontWeight: 500 }}> kcal</span></div>
                     <div className="progress mt-sm"><div className="progress-bar" style={{ width: pct + '%', background: pct > 100 ? 'var(--danger)' : 'var(--meals)' }} /></div>
@@ -481,7 +480,7 @@ function Meals() {
                                         <div className="card-title">Scan Barcode</div>
                                         <div className="card-sub">Point camera at product barcode</div>
                                     </div>
-                                    <button className="btn ghost sm" onClick={stopScanner}>✕ Close</button>
+                                    <button className="btn ghost sm" onClick={stopScanner}><X size={13} className="inline mr-1" /> Close</button>
                                 </div>
                                 <div ref={scannerContainerRef} id="qr-reader" style={{ width: '100%', minHeight: 300 }} />
                                 <div className="muted mt-sm" style={{ fontSize: 12 }}>
@@ -517,10 +516,10 @@ function Meals() {
                         <div className="field">
                             <label>Meal type</label>
                             <select className="select" value={manualCategory} onChange={e => setManualCategory(e.target.value)}>
-                                <option value="breakfast"><Sun size={14} className="inline mr-1" /> Breakfast</option>
-                                <option value="lunch"><Sun size={14} className="inline mr-1" /> Lunch</option>
-                                <option value="dinner"><Moon size={14} className="inline mr-1" /> Dinner</option>
-                                <option value="snack"><Cookie size={14} className="inline mr-1" /> Snack</option>
+                                <option value="breakfast">Breakfast</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="dinner">Dinner</option>
+                                <option value="snack">Snack</option>
                             </select>
                         </div>
                         <div className="field" style={{ justifyContent: 'flex-end' }}>
@@ -540,10 +539,10 @@ function Meals() {
                             <div className="field">
                                 <label>Meal type</label>
                                 <select className="select" value={dishCategory} onChange={e => setDishCategory(e.target.value as 'breakfast' | 'lunch' | 'dinner' | 'snack')}>
-                                    <option value="breakfast"><Sun size={14} className="inline mr-1" /> Breakfast</option>
-                                    <option value="lunch"><Sun size={14} className="inline mr-1" /> Lunch</option>
-                                    <option value="dinner"><Moon size={14} className="inline mr-1" /> Dinner</option>
-                                    <option value="snack"><Cookie size={14} className="inline mr-1" /> Snack</option>
+                                    <option value="breakfast">Breakfast</option>
+                                    <option value="lunch">Lunch</option>
+                                    <option value="dinner">Dinner</option>
+                                    <option value="snack">Snack</option>
                                 </select>
                             </div>
                         </div>
@@ -586,7 +585,7 @@ function Meals() {
                                             <tr key={i}>
                                                 <td style={{ color: 'var(--text-0)' }}>{ing.name}</td>
                                                 <td className="muted">{ing.calories} kcal</td>
-                                                <td><button className="btn ghost sm" onClick={() => setIngredients(p => p.filter((_, idx) => idx !== i))}>✕</button></td>
+                                                <td><button className="btn ghost sm" onClick={() => setIngredients(p => p.filter((_, idx) => idx !== i))}><X size={12} /></button></td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -607,7 +606,7 @@ function Meals() {
                         </div>
                     </div>
                     {meals.length === 0 ? (
-                        <div className="empty"><div className="empty-icon">○</div>No meals yet. Add one above.</div>
+                        <div className="empty"><div className="empty-icon"><Circle size={24} /></div>No meals yet. Add one above.</div>
                     ) : (
                         <table className="table">
                             <thead>
@@ -622,7 +621,7 @@ function Meals() {
                                         <td className="muted">{m.protein || '-'}g</td>
                                         <td className="muted">{m.carbs || '-'}g</td>
                                         <td className="muted">{m.fat || '-'}g</td>
-                                        <td><button className="btn ghost sm" onClick={() => removeMeal(m._id || m.id)}>✕</button></td>
+                                        <td><button className="btn ghost sm" onClick={() => removeMeal(m._id || m.id)}><X size={12} /></button></td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -639,7 +638,7 @@ function Meals() {
                     </div>
                     <div style={{ width: '100%', height: 240 }}>
                         {catData.length === 0 ? (
-                            <div className="empty"><div className="empty-icon">○</div>No data yet.</div>
+                            <div className="empty"><div className="empty-icon"><Circle size={24} /></div>No data yet.</div>
                         ) : (
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>

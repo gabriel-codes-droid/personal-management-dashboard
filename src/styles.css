@@ -88,10 +88,10 @@ html[data-theme="dark"] {
   --background: #000000;
   --foreground: #fafaf9;
 
-  --card: #0a0a0a;
+  --card: #000000;
   --card-foreground: #fafaf9;
 
-  --popover: #0a0a0a;
+  --popover: #000000;
   --popover-foreground: #fafaf9;
 
   --primary: #fafaf9;
@@ -115,10 +115,10 @@ html[data-theme="dark"] {
 
   /* Surface mapping - warm dark stone */
   --bg-0: #000000;
-  --bg-1: #050505;
-  --bg-2: #0f0f0f;
-  --bg-3: #1f1f1f;
-  --bg-elevated: #0a0a0a;
+  --bg-1: #000000;
+  --bg-2: #000000;
+  --bg-3: #1a1a1a;
+  --bg-elevated: #000000;
   --border: #242424;
   --border-strong: #57534e;
 
@@ -154,88 +154,17 @@ body {
   font-size: 16px;
 }
 
-/* Typography scaling — slight bump across the board */
+/* Typography scale lives further down in this file, in the
+   "Keep the type scale stable" block — the rest of the old
+   duplicate block was removed because it silently fought with
+   it via CSS specificity (e.g. bare .kpi-value vs .kpi .kpi-value),
+   producing inconsistent rendered sizes across pages. Raw
+   heading tags (h1–h5, used directly in Settings.tsx) still
+   need a rule since nothing else in this file sizes them. */
 h1, h2, h3, h4, h5 {
   font-size: clamp(1.5rem, 2.5vw, 2rem);
   line-height: 1.25;
   letter-spacing: -0.01em;
-}
-
-.section-title {
-  font-size: clamp(1.35rem, 2.3vw, 1.75rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.card-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.btn {
-  font-size: 0.9375rem;
-  line-height: 1.25;
-  padding: 0.625rem 1.25rem;
-}
-
-.btn.sm {
-  font-size: 0.875rem;
-  padding: 0.5rem 1rem;
-}
-
-.nav-link {
-  font-size: 0.9375rem;
-  font-weight: 500;
-}
-
-.nav-link:hover,
-.nav-link.active {
-  font-weight: 600;
-}
-
-.kpi-value {
-  font-size: 1.875rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-}
-
-.kpi-label {
-  font-size: 0.8125rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 600;
-}
-
-.card-sub {
-  font-size: 0.875rem;
-  font-weight: 400;
-}
-
-.section-sub {
-  font-size: 1rem;
-  font-weight: 400;
-}
-
-.form-label,
-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.input {
-  font-size: 0.9375rem;
-}
-
-.form-error {
-  font-size: 0.8125rem;
-  font-weight: 500;
-}
-
-.nav-sub {
-  font-size: 0.75rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
 }
 
 /* Theme switch animation from center */

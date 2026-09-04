@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from './auth';
 import { useTheme } from './theme';
 import { getFirebaseErrorMessage } from './firebaseErrorHandler';
-import { User, Lock, Palette, Camera, RefreshCw, Moon, Sun, Check } from 'lucide-react';
+import { User, Lock, Palette, Camera, Moon, Sun, Check } from 'lucide-react';
 
 const convertToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {

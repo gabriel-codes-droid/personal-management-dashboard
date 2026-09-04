@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Stray file some command created via `> nul` redirection in a
+# shell that doesn't treat nul as the Windows null device (this
+# happens in Git Bash/MSYS). Windows reserves this name, so git
+# can't track it — ignore it instead of trying to add/delete it.
+nul
+
 # Firebase
 .firebase/
 .env.firebase
@@ -26,4 +32,5 @@ dist-ssr
 *.ntvs*
 *.njsproj
 *.sln
+nul
 *.sw?

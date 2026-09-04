@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import {
   Briefcase, ChefHat, Car, ShoppingBag, FileText, Film, Heart, Circle,
-  ArrowUpRight,
+  ArrowUpRight, ArrowDownRight, X, Target,
 } from 'lucide-react';
 
 const CATS = [
@@ -241,7 +241,7 @@ function Finance() {
                     </div>
                 </div>
                 <div className="kpi accent">
-                    <div className="kpi-icon" style={{ background: 'var(--danger-soft)', color: 'var(--danger)' }}>↘</div>
+                    <div className="kpi-icon" style={{ background: 'var(--danger-soft)', color: 'var(--danger)' }}><ArrowDownRight size={18} /></div>
                     <div className="kpi-label">Expenses</div>
                     <div className="kpi-value" style={{ color: 'var(--danger)' }}>-${totalExpense.toFixed(2)}</div>
                     <div className="kpi-sub muted">
@@ -258,8 +258,8 @@ function Finance() {
                     </div>
                 </div>
                 <div className="tabs">
-                    <button className={'tab ' + (type === 'expense' ? 'active' : '')} onClick={() => setType('expense')}>↘ Expense</button>
-                    <button className={'tab ' + (type === 'income' ? 'active' : '')} onClick={() => setType('income')}>↗ Income</button>
+                    <button className={'tab ' + (type === 'expense' ? 'active' : '')} onClick={() => setType('expense')}><ArrowDownRight size={13} className="inline mr-1" /> Expense</button>
+                    <button className={'tab ' + (type === 'income' ? 'active' : '')} onClick={() => setType('income')}><ArrowUpRight size={13} className="inline mr-1" /> Income</button>
                 </div>
                 {error && <div className="auth-error">{error}</div>}
                 <div className="form-row">
@@ -274,7 +274,7 @@ function Finance() {
                     <div className="field">
                         <label>Category</label>
                         <select className="select" value={category} onChange={e => setCategory(e.target.value)}>
-                            {CATS.map(c => <option key={c.key} value={c.key}>{c.icon} {c.label}</option>)}
+                            {CATS.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
                         </select>
                     </div>
                     <div className="field" style={{ justifyContent: 'flex-end' }}>
@@ -319,7 +319,7 @@ function Finance() {
                     </div>
                     <div style={{ width: '100%', height: 240 }}>
                         {expenseByCat.length === 0 ? (
-                            <div className="empty"><div className="empty-icon">○</div>No expenses yet.</div>
+                            <div className="empty"><div className="empty-icon"><Circle size={24} /></div>No expenses yet.</div>
                         ) : (
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
@@ -406,7 +406,7 @@ function Finance() {
                 </div>
                 {goals.length === 0 ? (
                     <div className="empty">
-                        <div className="empty-icon">🎯</div>
+                        <div className="empty-icon"><Target size={24} /></div>
                         No savings goals yet. Add one above to start tracking.
                     </div>
                 ) : (
@@ -420,7 +420,7 @@ function Finance() {
                                 <div key={g._id || g.id} className="card" style={{ background: 'var(--surface-1)' }}>
                                     <div className="card-header">
                                         <div className="card-title" style={{ fontSize: 15 }}>{g.name}</div>
-                                        <button className="btn ghost sm" onClick={() => removeGoal(g._id || g.id)}>✕</button>
+                                        <button className="btn ghost sm" onClick={() => removeGoal(g._id || g.id)}><X size={12} /></button>
                                     </div>
                                     <div className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
                                         ${g.current.toFixed(2)} of ${g.target.toFixed(2)}
@@ -469,7 +469,7 @@ function Finance() {
                 </div>
 
                 {filtered.length === 0 ? (
-                    <div className="empty"><div className="empty-icon">○</div>No transactions match this filter.</div>
+                    <div className="empty"><div className="empty-icon"><Circle size={24} /></div>No transactions match this filter.</div>
                 ) : (
                     <table className="table">
                         <thead>
@@ -487,7 +487,7 @@ function Finance() {
                                 <tr key={t._id}>
                                     <td>
                                         <span className={'badge ' + (t.amount >= 0 ? 'success' : 'danger')}>
-                                            {t.amount >= 0 ? '↗ IN' : '↘ OUT'}
+                                            {t.amount >= 0 ? <><ArrowUpRight size={11} className="inline mr-1" /> IN</> : <><ArrowDownRight size={11} className="inline mr-1" /> OUT</>}
                                         </span>
                                     </td>
                                     <td style={{ color: 'var(--text-0)', fontWeight: 500 }}>{t.description}</td>
@@ -501,7 +501,7 @@ function Finance() {
                                         {t.amount >= 0 ? '+' : ''}${Math.abs(t.amount).toFixed(2)}
                                     </td>
                                     <td>
-                                        <button className="btn ghost sm" onClick={() => removeTransaction(t._id || t.id)}>✕</button>
+                                        <button className="btn ghost sm" onClick={() => removeTransaction(t._id || t.id)}><X size={12} /></button>
                                     </td>
                                 </tr>
                             ))}

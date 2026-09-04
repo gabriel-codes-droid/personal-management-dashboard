@@ -235,7 +235,17 @@ class NotificationService {
 
     getNotifications(): AppNotification[] {
         try {
-            return JSON.parse(localStorage.getItem('notifications') || '[]');
+            const stored: AppNotification[] = JSON.parse(localStorage.getItem('notifications') || '[]');
+            // Older versions of this app stored a raw emoji character in the
+            // `icon` field. Any notification whose icon isn't one of the
+            // current icon keys is stale data from that era — drop it so it
+            // can never render as a leftover emoji.
+            const validIcons = new Set(Object.values(iconMap));
+            const cleaned = stored.filter(n => validIcons.has(n.icon as IconKey));
+            if (cleaned.length !== stored.length) {
+                this.saveNotifications(cleaned);
+            }
+            return cleaned;
         } catch {
             return [];
         }

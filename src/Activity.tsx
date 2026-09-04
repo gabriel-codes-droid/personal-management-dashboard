@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { activities as actApi, type Activity } from './api';
 import { getFirebaseErrorMessage } from './firebaseErrorHandler';
 import {
