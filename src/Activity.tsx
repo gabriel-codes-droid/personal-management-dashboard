@@ -144,10 +144,10 @@ function Activity() {
                     <span className={'badge ' + s.color}><span className="dot"></span>{s.label}</span>
                 </div>
                 <div style={{ color: 'var(--text-2)', fontSize: 11, margin: '4px 0' }}>{a.description}</div>
-                <div className="meta">🕐 {new Date(a.startTime).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                <div className="meta"><Clock size={11} className="inline mr-1" /> {new Date(a.startTime).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
                 <div className="row gap-sm mt-sm">
-                    {!a.done && <button className="btn success sm" onClick={() => markDone(a.id)}>✓ Done</button>}
-                    <button className="btn ghost sm" onClick={() => removeActivity(a.id)}>✕</button>
+                    {!a.done && <button className="btn success sm" onClick={() => markDone(a.id)}><Check size={12} className="inline mr-1" /> Done</button>}
+                    <button className="btn ghost sm" onClick={() => removeActivity(a.id)}><X size={12} /></button>
                 </div>
             </div>
         );
@@ -169,19 +169,19 @@ function Activity() {
 
             <div className="grid grid-3 mb-md">
                 <div className="kpi activity">
-                    <div className="kpi-icon">▣</div>
+                    <div className="kpi-icon"><ListChecks size={18} /></div>
                     <div className="kpi-label">Total</div>
                     <div className="kpi-value">{activities.length}</div>
                     <div className="kpi-sub muted">activities</div>
                 </div>
                 <div className="kpi accent">
-                    <div className="kpi-icon" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}>✓</div>
+                    <div className="kpi-icon" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}><Check size={18} /></div>
                     <div className="kpi-label">Completed</div>
                     <div className="kpi-value">{done.length}</div>
                     <div className="kpi-sub muted">{activities.length ? Math.round((done.length / activities.length) * 100) : 0}% completion</div>
                 </div>
                 <div className="kpi accent">
-                    <div className="kpi-icon" style={{ background: 'var(--info-soft)', color: 'var(--info)' }}>◷</div>
+                    <div className="kpi-icon" style={{ background: 'var(--info-soft)', color: 'var(--info)' }}><Timer size={18} /></div>
                     <div className="kpi-label">Live now</div>
                     <div className="kpi-value">{ongoing.length}</div>
                     <div className="kpi-sub muted">in progress</div>
@@ -189,8 +189,8 @@ function Activity() {
             </div>
 
             <div className="tabs mb-md">
-                <button className={'tab ' + (mode === 'schedule' ? 'active' : '')} onClick={() => setMode('schedule')}>📅 Schedule</button>
-                <button className={'tab ' + (mode === 'countdown' ? 'active' : '')} onClick={() => setMode('countdown')}>⏳ Countdown</button>
+                <button className={'tab ' + (mode === 'schedule' ? 'active' : '')} onClick={() => setMode('schedule')}><Calendar size={13} className="inline mr-1" /> Schedule</button>
+                <button className={'tab ' + (mode === 'countdown' ? 'active' : '')} onClick={() => setMode('countdown')}><Timer size={13} className="inline mr-1" /> Countdown</button>
             </div>
 
             {error && <div className="auth-error">{error}</div>}
@@ -244,14 +244,14 @@ function Activity() {
                         <div className="field" style={{ justifyContent: 'flex-end' }}>
                             <label>&nbsp;</label>
                             <div className="row gap-sm">
-                                <button className="btn primary" onClick={startCountdown} disabled={isRunning}>▶ Start</button>
-                                <button className="btn ghost" onClick={() => setIsRunning(false)} disabled={!isRunning}>■ Stop</button>
-                                <button className="btn ghost" onClick={() => { setIsRunning(false); setFinished(false); setTime(0); }}>↺ Reset</button>
+                                <button className="btn primary" onClick={startCountdown} disabled={isRunning}><Play size={13} className="inline mr-1" /> Start</button>
+                                <button className="btn ghost" onClick={() => setIsRunning(false)} disabled={!isRunning}><Square size={13} className="inline mr-1" /> Stop</button>
+                                <button className="btn ghost" onClick={() => { setIsRunning(false); setFinished(false); setTime(0); }}><RotateCcw size={13} className="inline mr-1" /> Reset</button>
                             </div>
                         </div>
                     </div>
                     <div className={'countdown' + (finished ? ' finished' : '')}>{formatTime(time)}</div>
-                    {finished && <div className="badge danger" style={{ padding: '8px 12px' }}>⏰ Time is up!</div>}
+                    {finished && <div className="badge danger" style={{ padding: '8px 12px' }}><Bell size={13} className="inline mr-1" /> Time is up!</div>}
                 </div>
             )}
 
