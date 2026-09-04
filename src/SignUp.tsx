@@ -4,6 +4,7 @@ import { useAuth } from './auth';
 import { useTheme } from './theme';
 import { validateUsername, validateEmail, validatePassword, passwordStrength, PasswordStrength } from './validation';
 import { getFirebaseErrorMessage } from './firebaseErrorHandler';
+import { AlertTriangle, Check, Eye, EyeOff, Loader, Moon, Sun } from 'lucide-react';
 
 type AvailabilityStatus = 'unknown' | 'checking' | 'available' | 'taken';
 
@@ -121,7 +122,7 @@ function Signup() {
     return (
         <div className="auth-shell">
             <button className="theme-btn auth-theme-toggle" onClick={toggle} aria-label="Toggle theme" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
-                {theme === 'dark' ? '☀' : '☾'}
+                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <div className="auth-card">
                 <div className="auth-brand">
@@ -156,15 +157,15 @@ function Signup() {
                             maxLength={32}
                         />
                         {fieldErrors.username
-                            ? <div className="field-error">⚠ {fieldErrors.username}</div>
+                            ? <div className="field-error"><AlertTriangle size={14} /> {fieldErrors.username}</div>
                             : usernameStatus === 'taken'
-                                ? <div className="field-error">⚠ That username is already taken.</div>
+                                ? <div className="field-error"><AlertTriangle size={14} /> That username is already taken.</div>
                                 : usernameStatus === 'available'
-                                    ? <div className="field-hint ok">✓ Username is available</div>
+                                    ? <div className="field-hint ok"><Check size={14} /> Username is available</div>
                                     : usernameStatus === 'checking'
                                         ? <div className="field-hint">Checking…</div>
                                         : hasInvalidChars
-                                            ? <div className="field-hint warn">⚠ Only letters and numbers allowed.</div>
+                                            ? <div className="field-hint warn"><AlertTriangle size={14} /> Only letters and numbers allowed.</div>
                                             : null
                         }
                     </div>
@@ -181,11 +182,11 @@ function Signup() {
                             autoComplete="email"
                         />
                         {fieldErrors.email
-                            ? <div className="field-error">⚠ {fieldErrors.email}</div>
+                            ? <div className="field-error"><AlertTriangle size={14} /> {fieldErrors.email}</div>
                             : emailStatus === 'taken'
-                                ? <div className="field-error">⚠ This email is already registered. <Link to="/login">Sign in?</Link></div>
+                                ? <div className="field-error"><AlertTriangle size={14} /> This email is already registered. <Link to="/login">Sign in?</Link></div>
                                 : emailStatus === 'available'
-                                    ? <div className="field-hint ok">✓ Email is available</div>
+                                    ? <div className="field-hint ok"><Check size={14} /> Email is available</div>
                                     : emailStatus === 'checking'
                                         ? <div className="field-hint">Checking…</div>
                                         : null
@@ -211,7 +212,7 @@ function Signup() {
                                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 title={showPassword ? 'Hide password' : 'Show password'}
                             >
-                                {showPassword ? '🙈' : '👁'}
+                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
                         </div>
                         <div className="pw-strength" data-score={pwStrength.score}>
@@ -223,7 +224,7 @@ function Signup() {
                         {password.length > 0 && pwStrength.issues.length > 0 && (
                             <div className="pw-hints">Add: {pwStrength.issues.join(', ')}.</div>
                         )}
-                        {fieldErrors.password && <div className="field-error">⚠ {fieldErrors.password}</div>}
+                        {fieldErrors.password && <div className="field-error"><AlertTriangle size={14} /> {fieldErrors.password}</div>}
                     </div>
                     <div className="field mb-md">
                         <label>Confirm password</label>
@@ -245,13 +246,13 @@ function Signup() {
                                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 title={showPassword ? 'Hide password' : 'Show password'}
                             >
-                                {showPassword ? '🙈' : '👁'}
+                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
                         </div>
-                        {fieldErrors.confirm && <div className="field-error">⚠ {fieldErrors.confirm}</div>}
+                        {fieldErrors.confirm && <div className="field-error"><AlertTriangle size={14} /> {fieldErrors.confirm}</div>}
                     </div>
                     <button type="submit" className="btn primary auth-submit" disabled={loading}>
-                        {loading ? <><span className="spinner" /> Creating account...</> : 'Create account'}
+                        {loading ? <><Loader size={15} className="animate-spin" /> Creating account...</> : 'Create account'}
                     </button>
                 </form>
 

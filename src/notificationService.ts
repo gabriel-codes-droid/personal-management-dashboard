@@ -1,5 +1,26 @@
 import { AppNotification } from './api';
 
+type IconKey = 'mail' | 'warning' | 'creditcard' | 'barChart' | 'alertOctagon'
+  | 'hamburger' | 'checkCircle' | 'utensils' | 'clock' | 'bell'
+  | 'activity' | 'trophy' | 'sweat' | 'clipboardList';
+
+const iconMap: Record<string, IconKey> = {
+  mail: 'mail',
+  warning: 'warning',
+  creditcard: 'creditcard',
+  barChart: 'barChart',
+  alertOctagon: 'alertOctagon',
+  hamburger: 'hamburger',
+  checkCircle: 'checkCircle',
+  utensils: 'utensils',
+  clock: 'clock',
+  bell: 'bell',
+  activity: 'activity',
+  trophy: 'trophy',
+  sweat: 'sweat',
+  clipboardList: 'clipboardList',
+};
+
 class NotificationService {
     private permission: NotificationPermission = 'default';
     private swRegistration: ServiceWorkerRegistration | null = null;
@@ -57,7 +78,7 @@ class NotificationService {
         if (totalBalance < 0) {
             notifications.push({
                 type: 'danger',
-                icon: '💸',
+                icon: iconMap.mail,
                 message: 'Your balance is negative. Review your expenses.',
                 timestamp: new Date().toLocaleString(),
                 read: false
@@ -65,7 +86,7 @@ class NotificationService {
         } else if (totalBalance < 100) {
             notifications.push({
                 type: 'warning',
-                icon: '⚠️',
+                icon: iconMap.warning,
                 message: 'Balance is getting low. Be mindful of spending.',
                 timestamp: new Date().toLocaleString(),
                 read: false
@@ -75,7 +96,7 @@ class NotificationService {
         if (recentLargeExpense) {
             notifications.push({
                 type: 'warning',
-                icon: '💳',
+                icon: iconMap.creditcard,
                 message: `Large expense detected: $${Math.abs(recentLargeExpense.amount).toFixed(2)} for ${recentLargeExpense.description}`,
                 timestamp: new Date(recentLargeExpense.createdAt).toLocaleString(),
                 read: false
@@ -85,7 +106,7 @@ class NotificationService {
         if (totalExpense > 1000) {
             notifications.push({
                 type: 'info',
-                icon: '📊',
+                icon: iconMap.barChart,
                 message: `Monthly expenses exceeded $1,000. Current: $${totalExpense.toFixed(2)}`,
                 timestamp: new Date().toLocaleString(),
                 read: false
@@ -103,7 +124,7 @@ class NotificationService {
         if (totalCalories > 3000) {
             notifications.push({
                 type: 'danger',
-                icon: '🚨',
+                icon: iconMap.alertOctagon,
                 message: 'Over 3000 kcal logged today. Consider lighter meals.',
                 timestamp: new Date().toLocaleString(),
                 read: false
@@ -111,7 +132,7 @@ class NotificationService {
         } else if (totalCalories > DAILY_TARGET) {
             notifications.push({
                 type: 'warning',
-                icon: '🍔',
+                icon: iconMap.hamburger,
                 message: `Above ${DAILY_TARGET} kcal daily intake. Current: ${totalCalories} kcal`,
                 timestamp: new Date().toLocaleString(),
                 read: false
@@ -119,7 +140,7 @@ class NotificationService {
         } else if (meals.length > 0) {
             notifications.push({
                 type: 'success',
-                icon: '✅',
+                icon: iconMap.checkCircle,
                 message: 'Calorie intake within healthy range.',
                 timestamp: new Date().toLocaleString(),
                 read: false
@@ -127,7 +148,7 @@ class NotificationService {
         } else {
             notifications.push({
                 type: 'info',
-                icon: '🍽️',
+                icon: iconMap.utensils,
                 message: 'No meals logged yet today.',
                 timestamp: new Date().toLocaleString(),
                 read: false
@@ -147,7 +168,7 @@ class NotificationService {
         if (overdue.length > 0) {
             notifications.push({
                 type: 'danger',
-                icon: '⏰',
+                icon: iconMap.clock,
                 message: `${overdue.length} activities are overdue!`,
                 timestamp: new Date().toLocaleString(),
                 read: false
@@ -155,15 +176,15 @@ class NotificationService {
         }
 
         if (upcoming.length > 0) {
-            const nextActivity = upcoming.sort((a, b) => 
+            const nextActivity = upcoming.sort((a, b) =>
                 new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
             )[0];
             const timeUntilNext = Math.floor((new Date(nextActivity.startTime).getTime() - now.getTime()) / (1000 * 60 * 60));
-            
+
             if (timeUntilNext <= 1) {
                 notifications.push({
                     type: 'warning',
-                    icon: '🔔',
+                    icon: iconMap.bell,
                     message: `Activity "${nextActivity.title}" starting in ${timeUntilNext} hour(s)!`,
                     timestamp: new Date().toLocaleString(),
                     read: false
@@ -174,7 +195,7 @@ class NotificationService {
         if (activities.length === 0) {
             notifications.push({
                 type: 'info',
-                icon: '🏃',
+                icon: iconMap.activity,
                 message: 'No activities scheduled. Add some to stay on track.',
                 timestamp: new Date().toLocaleString(),
                 read: false
@@ -182,7 +203,7 @@ class NotificationService {
         } else if (done === activities.length) {
             notifications.push({
                 type: 'success',
-                icon: '🏆',
+                icon: iconMap.trophy,
                 message: 'All activities completed for today!',
                 timestamp: new Date().toLocaleString(),
                 read: false
@@ -190,7 +211,7 @@ class NotificationService {
         } else if (activities.length >= 6 && done < activities.length / 2) {
             notifications.push({
                 type: 'danger',
-                icon: '😓',
+                icon: iconMap.sweat,
                 message: 'Many pending activities. You may be overloading yourself.',
                 timestamp: new Date().toLocaleString(),
                 read: false
@@ -198,7 +219,7 @@ class NotificationService {
         } else {
             notifications.push({
                 type: 'info',
-                icon: '📋',
+                icon: iconMap.clipboardList,
                 message: `${activities.length - done} activities still pending.`,
                 timestamp: new Date().toLocaleString(),
                 read: false
@@ -225,7 +246,6 @@ class NotificationService {
         notifications.unshift(notification);
         this.saveNotifications(notifications);
 
-        // Show browser notification if permitted (skip when bulk-loading on page mount)
         if (!opts?.silent && this.permission === 'granted') {
             this.showLocalNotification(notification.message, {
                 body: notification.timestamp,

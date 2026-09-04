@@ -1,5 +1,5 @@
 import {
-  Eye, X, Ban, CheckCircle2, ClipboardList, Lock,
+  Eye, X, Ban, CheckCircle2, ClipboardList, Lock, Users, Wallet, Utensils, CheckSquare, Star,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { admin, User, AdminStats } from './api';
@@ -156,22 +156,22 @@ function Admin() {
             {stats && (
                 <div className="grid grid-4 mb-md">
                     <div className="kpi accent">
-                        <div className="kpi-icon">◔</div>
+                        <div className="kpi-icon"><Users size={18} /></div>
                         <div className="kpi-label">Users</div>
                         <div className="kpi-value">{stats.totalUsers}</div>
                     </div>
                     <div className="kpi finance">
-                        <div className="kpi-icon">◆</div>
+                        <div className="kpi-icon"><Wallet size={18} /></div>
                         <div className="kpi-label">Transactions</div>
                         <div className="kpi-value">{stats.totalTransactions}</div>
                     </div>
                     <div className="kpi meals">
-                        <div className="kpi-icon">◉</div>
+                        <div className="kpi-icon"><Utensils size={18} /></div>
                         <div className="kpi-label">Meals</div>
                         <div className="kpi-value">{stats.totalMeals}</div>
                     </div>
                     <div className="kpi activity">
-                        <div className="kpi-icon">▣</div>
+                        <div className="kpi-icon"><CheckSquare size={18} /></div>
                         <div className="kpi-label">Activities</div>
                         <div className="kpi-value">{stats.totalActivities}</div>
                     </div>
@@ -226,7 +226,7 @@ function Admin() {
                                 <td className="muted">{u.email}</td>
                                 <td>
                                     {u.role === 'admin'
-                                        ? <span className="admin-badge">★ Admin</span>
+                                        ? <span className="admin-badge"><Star size={11} className="inline mr-1" /> Admin</span>
                                         : <span className="badge">user</span>
                                     }
                                 </td>
@@ -274,7 +274,7 @@ function Admin() {
                 </table>
                 {filteredUsers.length === 0 && (
                     <div className="empty">
-                        <div className="empty-icon">👥</div>
+                        <div className="empty-icon"><Users size={24} /></div>
                         No users match your search criteria.
                     </div>
                 )}

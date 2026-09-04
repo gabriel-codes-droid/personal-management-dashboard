@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { auth } from './api';
 import { useTheme } from './theme';
 import { validateEmail, validatePassword, passwordStrength } from './validation';
-import { Eye, EyeOff, Sun, Moon } from 'lucide-react';
+import { Eye, EyeOff, Sun, Moon, ArrowLeft } from 'lucide-react';
 
 type Step = 'email' | 'code' | 'password' | 'done';
 
@@ -147,7 +147,7 @@ function ForgotPassword() {
                         </form>
                         <div className="auth-switch">
                             <button type="button" className="btn ghost sm" onClick={() => setStep('email')}>
-                                ← Use a different email
+                                <ArrowLeft size={13} className="inline mr-1" /> Use a different email
                             </button>
                         </div>
                     </>

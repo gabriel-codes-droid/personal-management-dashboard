@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from './auth';
 import { useTheme } from './theme';
 import { getFirebaseErrorMessage } from './firebaseErrorHandler';
+import { User, Lock, Palette, Camera, RefreshCw, Moon, Sun, Check } from 'lucide-react';
 
 const convertToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -130,19 +131,19 @@ export default function Settings() {
                     className={`tab ${activeTab === 'profile' ? 'active' : ''}`}
                     onClick={() => setActiveTab('profile')}
                 >
-                    👤 Profile
+                    <User size={14} className="inline mr-1" /> Profile
                 </button>
-                <button 
+                <button
                     className={`tab ${activeTab === 'security' ? 'active' : ''}`}
                     onClick={() => setActiveTab('security')}
                 >
-                    🔒 Security
+                    <Lock size={14} className="inline mr-1" /> Security
                 </button>
-                <button 
+                <button
                     className={`tab ${activeTab === 'appearance' ? 'active' : ''}`}
                     onClick={() => setActiveTab('appearance')}
                 >
-                    🎨 Appearance
+                    <Palette size={14} className="inline mr-1" /> Appearance
                 </button>
             </div>
 
@@ -170,7 +171,7 @@ export default function Settings() {
                                     disabled={uploadingImage}
                                 />
                                 <label htmlFor="profile-image-upload" className="upload-label">
-                                    <div className="upload-icon">📷</div>
+                                    <Camera size={20} />
                                     <div className="upload-text">
                                         {uploadingImage ? 'Processing...' : 'Click to upload image'}
                                     </div>
@@ -279,7 +280,7 @@ export default function Settings() {
 
                     {resetStep === 'success' && (
                         <div className="success-message">
-                            <div className="success-icon">✓</div>
+                            <div className="success-icon"><Check size={28} /></div>
                             <h4>Password Reset Email Sent</h4>
                             <p>Check your email for the password reset link. The link will expire in 1 hour.</p>
                             <button 
@@ -310,13 +311,13 @@ export default function Settings() {
                             onClick={() => setTheme('dark')}
                         >
                             <div className="theme-preview dark">
-                                <span className="theme-icon">☾</span>
+                                <span className="theme-icon"><Moon size={16} /></span>
                             </div>
                             <div className="theme-info">
                                 <div className="theme-name">Dark Mode</div>
                                 <div className="theme-desc">Default dark theme</div>
                             </div>
-                            {theme === 'dark' && <div className="theme-check">✓</div>}
+                            {theme === 'dark' && <div className="theme-check"><Check size={12} /></div>}
                         </div>
                         
                         <div 
@@ -324,13 +325,13 @@ export default function Settings() {
                             onClick={() => setTheme('light')}
                         >
                             <div className="theme-preview light">
-                                <span className="theme-icon">☀</span>
+                                <span className="theme-icon"><Sun size={16} /></span>
                             </div>
                             <div className="theme-info">
                                 <div className="theme-name">Light Mode</div>
                                 <div className="theme-desc">Lighter theme</div>
                             </div>
-                            {theme === 'light' && <div className="theme-check">✓</div>}
+                            {theme === 'light' && <div className="theme-check"><Check size={12} /></div>}
                         </div>
                     </div>
 
@@ -339,7 +340,7 @@ export default function Settings() {
                             className="btn primary"
                             onClick={toggle}
                         >
-                            Toggle Theme ({theme === 'dark' ? '☀' : '☾'})
+                            Toggle Theme ({theme === 'dark' ? <Sun size={14} className="inline mr-1" /> : <Moon size={14} className="inline mr-1" />})
                         </button>
                     </div>
                 </div>

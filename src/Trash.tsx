@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { trash as trashApi, TrashItem } from './api';
 import { getFirebaseErrorMessage } from './firebaseErrorHandler';
+import { Wallet, Utensils, CheckSquare, Circle } from 'lucide-react';
 
 const TYPE_LABEL: Record<TrashItem['itemType'], string> = {
     transaction: 'Transaction',
@@ -8,10 +9,10 @@ const TYPE_LABEL: Record<TrashItem['itemType'], string> = {
     activity: 'Activity',
 };
 
-const TYPE_ICON: Record<TrashItem['itemType'], string> = {
-    transaction: '◆',
-    meal: '◉',
-    activity: '▣',
+const TYPE_ICON: Record<TrashItem['itemType'], React.ReactNode> = {
+    transaction: <Wallet size={12} />,
+    meal: <Utensils size={12} />,
+    activity: <CheckSquare size={12} />,
 };
 
 function Trash() {
@@ -94,17 +95,17 @@ function Trash() {
 
             <div className="grid grid-3 mb-md">
                 <div className="kpi finance">
-                    <div className="kpi-icon">◆</div>
+                    <div className="kpi-icon"><Wallet size={18} /></div>
                     <div className="kpi-label">Transactions</div>
                     <div className="kpi-value">{counts.transaction}</div>
                 </div>
                 <div className="kpi meals">
-                    <div className="kpi-icon">◉</div>
+                    <div className="kpi-icon"><Utensils size={18} /></div>
                     <div className="kpi-label">Meals</div>
                     <div className="kpi-value">{counts.meal}</div>
                 </div>
                 <div className="kpi activity">
-                    <div className="kpi-icon">▣</div>
+                    <div className="kpi-icon"><CheckSquare size={18} /></div>
                     <div className="kpi-label">Activities</div>
                     <div className="kpi-value">{counts.activity}</div>
                 </div>
@@ -124,7 +125,7 @@ function Trash() {
                 </div>
                 {items.length === 0 ? (
                     <div className="empty">
-                        <div className="empty-icon">○</div>
+                        <div className="empty-icon"><Circle size={24} /></div>
                         Trash is empty. Deleted transactions, meals, and activities will show up here.
                     </div>
                 ) : (

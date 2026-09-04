@@ -5,6 +5,18 @@ import {
     PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid
 } from 'recharts';
 import { Html5QrcodeScanner } from 'html5-qrcode';
+import {
+  Search,
+  Scan,
+  Edit,
+  Utensils,
+  Sun,
+  Moon,
+  Cookie,
+  Carrot,
+  Circle,
+  Leaf,
+} from 'lucide-react';
 
 const DAILY_TARGET = 2000;
 const catColors: Record<string, string> = { breakfast: '#f59e0b', lunch: '#10b981', dinner: '#3b82f6', snack: '#a855f7' };
@@ -358,19 +370,19 @@ function Meals() {
                     <div className="kpi-sub muted mt-sm">{pct.toFixed(0)}% of {DAILY_TARGET} goal</div>
                 </div>
                 <div className="kpi accent">
-                    <div className="kpi-icon">🥩</div>
+                    <div className="kpi-icon"><Carrot size={16} /></div>
                     <div className="kpi-label">Protein</div>
                     <div className="kpi-value">{totalNutrition.protein}g</div>
                     <div className="kpi-sub muted">Daily total</div>
                 </div>
                 <div className="kpi accent">
-                    <div className="kpi-icon">🍞</div>
+                    <div className="kpi-icon"><Circle size={16} /></div>
                     <div className="kpi-label">Carbs</div>
                     <div className="kpi-value">{totalNutrition.carbs}g</div>
                     <div className="kpi-sub muted">Daily total</div>
                 </div>
                 <div className="kpi accent">
-                    <div className="kpi-icon">🥑</div>
+                    <div className="kpi-icon"><Leaf size={16} /></div>
                     <div className="kpi-label">Fat</div>
                     <div className="kpi-value">{totalNutrition.fat}g</div>
                     <div className="kpi-sub muted">Daily total</div>
@@ -385,10 +397,10 @@ function Meals() {
                     </div>
                 </div>
                 <div className="tabs">
-                    <button className={'tab ' + (mode === 'search' ? 'active' : '')} onClick={() => setMode('search')}>🔍 Search API</button>
-                    <button className={'tab ' + (mode === 'barcode' ? 'active' : '')} onClick={() => setMode('barcode')}>📱 Barcode</button>
-                    <button className={'tab ' + (mode === 'manual' ? 'active' : '')} onClick={() => setMode('manual')}>✏️ Manual</button>
-                    <button className={'tab ' + (mode === 'dish' ? 'active' : '')} onClick={() => setMode('dish')}>🍽️ Build Dish</button>
+                    <button className={'tab ' + (mode === 'search' ? 'active' : '')} onClick={() => setMode('search')}><Search size={14} className="inline mr-1" /> Search API</button>
+                    <button className={'tab ' + (mode === 'barcode' ? 'active' : '')} onClick={() => setMode('barcode')}><Scan size={14} className="inline mr-1" /> Barcode</button>
+                    <button className={'tab ' + (mode === 'manual' ? 'active' : '')} onClick={() => setMode('manual')}><Edit size={14} className="inline mr-1" /> Manual</button>
+                    <button className={'tab ' + (mode === 'dish' ? 'active' : '')} onClick={() => setMode('dish')}><Utensils size={14} className="inline mr-1" /> Build Dish</button>
                 </div>
                 {error && <div className="auth-error">{error}</div>}
 
@@ -400,7 +412,7 @@ function Meals() {
                                 <input className="input" placeholder="e.g. banana, chicken breast, oats..." value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchFood()} />
                             </div>
                             <button className="btn primary" onClick={searchFood} disabled={loadingSearch} style={{ height: 40 }}>
-                                {loadingSearch ? 'Searching...' : '🔍 Search'}
+                                {loadingSearch ? 'Searching...' : <><Search size={14} className="inline mr-1" /> Search</>}
                             </button>
                         </div>
                         {searchResults.length > 0 && (
@@ -452,14 +464,14 @@ function Meals() {
                                         <input className="input" placeholder="Enter barcode or scan..." value={barcodeInput} onChange={e => setBarcodeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchByBarcode(barcodeInput)} />
                                     </div>
                                     <button className="btn primary" onClick={() => searchByBarcode(barcodeInput)} disabled={loadingSearch} style={{ height: 40 }}>
-                                        {loadingSearch ? 'Searching...' : '🔍 Lookup'}
+                                        {loadingSearch ? 'Searching...' : <><Search size={14} className="inline mr-1" /> Lookup</>}
                                     </button>
                                 </div>
                                 <div className="muted mt-sm" style={{ fontSize: 12 }}>
                                     Enter a product barcode (EAN-13, UPC, etc.) to fetch nutrition data from OpenFoodFacts database.
                                 </div>
                                 <div className="mt-md">
-                                    <button className="btn ghost" onClick={startScanner}>📷 Scan with Camera</button>
+                                    <button className="btn ghost" onClick={startScanner}><Scan size={14} className="inline mr-1" /> Scan with Camera</button>
                                 </div>
                             </>
                         ) : (
@@ -505,10 +517,10 @@ function Meals() {
                         <div className="field">
                             <label>Meal type</label>
                             <select className="select" value={manualCategory} onChange={e => setManualCategory(e.target.value)}>
-                                <option value="breakfast">🌅 Breakfast</option>
-                                <option value="lunch">☀️ Lunch</option>
-                                <option value="dinner">🌙 Dinner</option>
-                                <option value="snack">🍪 Snack</option>
+                                <option value="breakfast"><Sun size={14} className="inline mr-1" /> Breakfast</option>
+                                <option value="lunch"><Sun size={14} className="inline mr-1" /> Lunch</option>
+                                <option value="dinner"><Moon size={14} className="inline mr-1" /> Dinner</option>
+                                <option value="snack"><Cookie size={14} className="inline mr-1" /> Snack</option>
                             </select>
                         </div>
                         <div className="field" style={{ justifyContent: 'flex-end' }}>
@@ -528,10 +540,10 @@ function Meals() {
                             <div className="field">
                                 <label>Meal type</label>
                                 <select className="select" value={dishCategory} onChange={e => setDishCategory(e.target.value as 'breakfast' | 'lunch' | 'dinner' | 'snack')}>
-                                    <option value="breakfast">🌅 Breakfast</option>
-                                    <option value="lunch">☀️ Lunch</option>
-                                    <option value="dinner">🌙 Dinner</option>
-                                    <option value="snack">🍪 Snack</option>
+                                    <option value="breakfast"><Sun size={14} className="inline mr-1" /> Breakfast</option>
+                                    <option value="lunch"><Sun size={14} className="inline mr-1" /> Lunch</option>
+                                    <option value="dinner"><Moon size={14} className="inline mr-1" /> Dinner</option>
+                                    <option value="snack"><Cookie size={14} className="inline mr-1" /> Snack</option>
                                 </select>
                             </div>
                         </div>

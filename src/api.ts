@@ -168,29 +168,28 @@ export const trash = {
 
 export const admin = {
     listUsers: async () => {
-        // Admin functionality would need Firebase Admin SDK
-        throw new Error('Admin functionality requires Firebase Admin SDK');
+        throw new Error('Use client-side Firestore query in Admin component');
     },
     deleteUser: async (_id: string) => {
-        throw new Error('Admin functionality requires Firebase Admin SDK');
+        throw new Error('Use client-side Firestore operations in Admin component');
     },
     setRole: async (_id: string, _role: 'user' | 'admin') => {
-        throw new Error('Admin functionality requires Firebase Admin SDK');
+        throw new Error('Use client-side Firestore operations in Admin component');
     },
     banUser: async (_id: string, _banned: boolean) => {
-        throw new Error('Admin functionality requires Firebase Admin SDK');
+        throw new Error('Use client-side Firestore operations in Admin component');
     },
     getUserStats: async (_id: string) => {
-        throw new Error('Admin functionality requires Firebase Admin SDK');
+        throw new Error('Use client-side Firestore operations in Admin component');
     },
     getUserActivity: async (_id: string) => {
-        throw new Error('Admin functionality requires Firebase Admin SDK');
+        throw new Error('Use client-side Firestore operations in Admin component');
     },
     stats: async () => {
-        throw new Error('Admin functionality requires Firebase Admin SDK');
+        throw new Error('Use client-side Firestore operations in Admin component');
     },
     analytics: async () => {
-        throw new Error('Admin functionality requires Firebase Admin SDK');
+        throw new Error('Use client-side Firestore operations in Admin component');
     },
 };
 

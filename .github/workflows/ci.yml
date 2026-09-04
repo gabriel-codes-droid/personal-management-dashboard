@@ -51,3 +51,26 @@ jobs:
           args: deploy --only hosting --project personal-management-dash-9b45a
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+      
+      - name: Deploy Firestore Rules
+        uses: firebase/firebase-tools-actions@v2
+        with:
+          args: deploy --only firestore:rules --project personal-management-dash-9b45a
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+      
+      - name: Deploy Firestore Indexes
+        uses: firebase/firebase-tools-actions@v2
+        with:
+          args: deploy --only firestore:indexes --project personal-management-dash-9b45a
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+      
+      - name: Deploy Cloud Functions
+        uses: firebase/firebase-tools-actions@v2
+        with:
+          args: deploy --only functions --project personal-management-dash-9b45a
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}

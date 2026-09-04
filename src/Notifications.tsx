@@ -1,6 +1,45 @@
 import { useState, useEffect } from 'react';
 import { AppNotification } from './api';
 import { notificationService } from './notificationService';
+import {
+  Mail,
+  AlertTriangle,
+  CreditCard,
+  BarChart3,
+  AlertOctagon,
+  Hamburger,
+  CheckCircle2,
+  Utensils,
+  Clock,
+  Bell,
+  Activity,
+  Trophy,
+  Thermometer,
+  ClipboardList,
+  Circle,
+  X,
+  Check,
+} from 'lucide-react';
+
+const iconFromKey = (key: string) => {
+  switch (key) {
+    case 'mail': return <Mail size={14} />;
+    case 'warning': return <AlertTriangle size={14} />;
+    case 'creditcard': return <CreditCard size={14} />;
+    case 'barChart': return <BarChart3 size={14} />;
+    case 'alertOctagon': return <AlertOctagon size={14} />;
+    case 'hamburger': return <Hamburger size={14} />;
+    case 'checkCircle': return <CheckCircle2 size={14} />;
+    case 'utensils': return <Utensils size={14} />;
+    case 'clock': return <Clock size={14} />;
+    case 'bell': return <Bell size={14} />;
+    case 'activity': return <Activity size={14} />;
+    case 'trophy': return <Trophy size={14} />;
+    case 'sweat': return <Thermometer size={14} />;
+    case 'clipboardList': return <ClipboardList size={14} />;
+    default: return <Bell size={14} />;
+  }
+};
 
 function Notifications() {
     const [notifications, setNotifications] = useState<AppNotification[]>(() => notificationService.getNotifications());
@@ -16,16 +55,11 @@ function Notifications() {
             }
         };
         checkPermission();
-        
-        // Load email notification preference
+
         const loadEmailPref = async () => {
             try {
-                // Firebase doesn't have email notifications by default
-                // This would need to be implemented separately
                 setEmailEnabled(false);
-            } catch {
-                // Ignore error
-            }
+            } catch {}
         };
         loadEmailPref();
     }, []);
@@ -51,8 +85,6 @@ function Notifications() {
 
     const toggleEmailNotifications = async () => {
         try {
-            // Firebase doesn't have built-in email notifications
-            // This would need to be implemented with Firebase Cloud Functions
             setDigestMessage('Email notifications require Firebase Cloud Functions');
             setTimeout(() => setDigestMessage(''), 3000);
         } catch {
@@ -65,8 +97,6 @@ function Notifications() {
         setSendingDigest(true);
         setDigestMessage('');
         try {
-            // Firebase doesn't have built-in email digests
-            // This would need to be implemented with Firebase Cloud Functions
             setDigestMessage('Email digests require Firebase Cloud Functions');
             setTimeout(() => setDigestMessage(''), 3000);
         } catch {
@@ -86,17 +116,17 @@ function Notifications() {
 
             <div className="grid grid-3 mb-md">
                 <div className="kpi accent">
-                    <div className="kpi-icon">◔</div>
+                    <div className="kpi-icon"><Bell size={16} /></div>
                     <div className="kpi-label">Total</div>
                     <div className="kpi-value">{notifications.length}</div>
                 </div>
                 <div className="kpi accent">
-                    <div className="kpi-icon" style={{ background: 'var(--info-soft)', color: 'var(--info)' }}>○</div>
+                    <div className="kpi-icon" style={{ background: 'var(--info-soft)', color: 'var(--info)' }}><Circle size={16} /></div>
                     <div className="kpi-label">Unread</div>
                     <div className="kpi-value">{unread}</div>
                 </div>
                 <div className="kpi accent">
-                    <div className="kpi-icon" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}>✓</div>
+                    <div className="kpi-icon" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}><Check size={16} /></div>
                     <div className="kpi-label">Read</div>
                     <div className="kpi-value">{notifications.length - unread}</div>
                 </div>
@@ -108,16 +138,16 @@ function Notifications() {
                         <div className="card-title">Push Notifications</div>
                         <div className="card-sub">Enable browser notifications for real-time alerts</div>
                     </div>
-                    <button 
-                        className="btn ghost sm" 
+                    <button
+                        className="btn ghost sm"
                         onClick={requestPermission}
                         disabled={permission === 'granted'}
                     >
-                        {permission === 'granted' ? '✓ Enabled' : permission === 'denied' ? '✕ Blocked' : 'Enable'}
+                        {permission === 'granted' ? <><Check size={13} className="inline mr-1" /> Enabled</> : permission === 'denied' ? <><X size={13} className="inline mr-1" /> Blocked</> : 'Enable'}
                     </button>
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
-                    {permission === 'granted' 
+                    {permission === 'granted'
                         ? 'Push notifications are enabled. You will receive alerts for important events.'
                         : permission === 'denied'
                         ? 'Push notifications are blocked. Enable them in your browser settings.'
@@ -132,15 +162,15 @@ function Notifications() {
                         <div className="card-title">Email Digest</div>
                         <div className="card-sub">Receive daily summary via email</div>
                     </div>
-                    <button 
+                    <button
                         className={'btn ghost sm ' + (emailEnabled ? 'success' : '')}
                         onClick={toggleEmailNotifications}
                     >
-                        {emailEnabled ? '✓ Enabled' : 'Enable'}
+                        {emailEnabled ? <><Check size={13} className="inline mr-1" /> Enabled</> : 'Enable'}
                     </button>
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 12 }}>
-                    {emailEnabled 
+                    {emailEnabled
                         ? 'Email digests are enabled. You will receive daily summaries.'
                         : 'Email digests are disabled. Enable to receive daily summaries.'
                     }
@@ -150,12 +180,12 @@ function Notifications() {
                         {digestMessage}
                     </div>
                 )}
-                <button 
-                    className="btn primary sm" 
+                <button
+                    className="btn primary sm"
                     onClick={sendDigest}
                     disabled={!emailEnabled || sendingDigest}
                 >
-                    {sendingDigest ? 'Sending...' : '📧 Send Test Digest'}
+                    {sendingDigest ? 'Sending...' : <><Mail size={14} className="inline mr-1" /> Send Test Digest</>}
                 </button>
             </div>
 
@@ -172,15 +202,15 @@ function Notifications() {
                 </div>
 
                 {notifications.length === 0 ? (
-                    <div className="empty"><div className="empty-icon">◔</div>No notifications yet. They'll appear here based on your activity.</div>
+                    <div className="empty"><div className="empty-icon"><Bell size={24} /></div>No notifications yet. They'll appear here based on your activity.</div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {notifications.map((n, i) => (
                             <div key={i} className={'notif ' + (n.type || 'info')}>
-                                <div className="notif-icon">{n.icon}</div>
+                                <div className="notif-icon">{iconFromKey(n.icon)}</div>
                                 <div style={{ flex: 1 }}>
                                     <div className="notif-msg">{n.message}</div>
-                                    <div className="notif-time">🕐 {n.timestamp}</div>
+                                    <div className="notif-time">{n.timestamp}</div>
                                 </div>
                                 {!n.read && <span className="badge info" style={{ alignSelf: 'flex-start' }}>new</span>}
                             </div>

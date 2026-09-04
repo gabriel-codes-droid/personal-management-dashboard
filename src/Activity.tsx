@@ -1,6 +1,16 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { activities as actApi, type Activity } from './api';
 import { getFirebaseErrorMessage } from './firebaseErrorHandler';
+import {
+  Clock,
+  Check,
+  X,
+  Calendar,
+  Timer,
+  Bell,
+} from 'lucide-react';
+
+import { ListChecks, Play, Square, RotateCcw } from 'lucide-react';
 
 function Activity() {
     const [mode, setMode] = useState<'schedule' | 'countdown'>('schedule');

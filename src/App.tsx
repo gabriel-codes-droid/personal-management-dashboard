@@ -3,15 +3,20 @@ import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, useNaviga
 import { AuthProvider, useAuth } from './auth';
 import { ThemeProvider, useTheme } from './theme';
 import { AppNotification } from './api';
-import { 
-  LayoutDashboard, 
-  DollarSign, 
-  Utensils, 
-  Activity as ActivityIcon, 
-  Bell, 
-  Trash2, 
+import {
+  LayoutDashboard,
+  DollarSign,
+  Utensils,
+  Activity as ActivityIcon,
+  Bell,
+  Trash2,
   Settings as SettingsIcon,
-  Shield
+  Shield,
+  DoorOpen,
+  Sun,
+  Moon,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import Home from './Home';
 import Finance from './Finance';
@@ -132,14 +137,14 @@ function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
                     aria-label="Toggle sidebar"
                     title={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
                 >
-                    {sidebarOpen ? '◀' : '▶'}
+                    {sidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
                 </button>
                 <h1>{titles[location.pathname] || 'PMD'}</h1>
             </div>
             <div className="topbar-meta">
                 <span>{today}</span>
                 <button className="theme-btn" onClick={toggle} aria-label="Toggle theme" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
-                    {theme === 'dark' ? '☀' : '☾'}
+                    {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
                 <div style={{ position: 'relative' }}>
                     <div className="avatar" onClick={() => setMenuOpen(o => !o)} style={{ cursor: 'pointer' }} title={user?.email}>
@@ -167,12 +172,12 @@ function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
                                 <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', marginBottom: 6 }}>
                                     <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
                                         {user?.username || 'User'}
-                                        {user?.role === 'admin' && <span className="admin-badge">★ Admin</span>}
+                                        {user?.role === 'admin' && <span className="admin-badge"><Shield size={11} className="inline mr-1" /> Admin</span>}
                                     </div>
                                     <div style={{ fontSize: 11, color: 'var(--text-2)', marginTop: 2 }}>{user?.email}</div>
                                 </div>
                                 <button className="btn ghost" onClick={onLogout} style={{ width: '100%', justifyContent: 'flex-start' }}>
-                                    🚪 Sign out
+                                    <DoorOpen size={14} className="inline mr-1" /> Sign out
                                 </button>
                             </div>
                         </>
@@ -194,16 +199,32 @@ function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
                         overflowY: 'auto',
                     }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            <NavLink to="/" className="nav-link" onClick={() => setMobileNavOpen(false)}>📊 Dashboard</NavLink>
-                            <NavLink to="/finance" className="nav-link" onClick={() => setMobileNavOpen(false)}>💰 Finance</NavLink>
-                            <NavLink to="/meals" className="nav-link" onClick={() => setMobileNavOpen(false)}>🍽️ Meals</NavLink>
-                            <NavLink to="/activity" className="nav-link" onClick={() => setMobileNavOpen(false)}>🏃 Activity</NavLink>
+                            <NavLink to="/" className="nav-link" onClick={() => setMobileNavOpen(false)}>
+                                <LayoutDashboard size={18} className="icon" /> Dashboard
+                            </NavLink>
+                            <NavLink to="/finance" className="nav-link" onClick={() => setMobileNavOpen(false)}>
+                                <DollarSign size={18} className="icon" /> Finance
+                            </NavLink>
+                            <NavLink to="/meals" className="nav-link" onClick={() => setMobileNavOpen(false)}>
+                                <Utensils size={18} className="icon" /> Meals
+                            </NavLink>
+                            <NavLink to="/activity" className="nav-link" onClick={() => setMobileNavOpen(false)}>
+                                <ActivityIcon size={18} className="icon" /> Activity
+                            </NavLink>
                             {user?.role === 'admin' && (
-                                <NavLink to="/admin" className="nav-link" onClick={() => setMobileNavOpen(false)}>🔧 Admin</NavLink>
+                                <NavLink to="/admin" className="nav-link" onClick={() => setMobileNavOpen(false)}>
+                                    <Shield size={18} className="icon" /> Admin
+                                </NavLink>
                             )}
-                            <NavLink to="/notifications" className="nav-link" onClick={() => setMobileNavOpen(false)}>🔔 Notifications</NavLink>
-                            <NavLink to="/trash" className="nav-link" onClick={() => setMobileNavOpen(false)}>🗑️ Trash</NavLink>
-                            <NavLink to="/settings" className="nav-link" onClick={() => setMobileNavOpen(false)}>⚙️ Settings</NavLink>
+                            <NavLink to="/notifications" className="nav-link" onClick={() => setMobileNavOpen(false)}>
+                                <Bell size={18} className="icon" /> Notifications
+                            </NavLink>
+                            <NavLink to="/trash" className="nav-link" onClick={() => setMobileNavOpen(false)}>
+                                <Trash2 size={18} className="icon" /> Trash
+                            </NavLink>
+                            <NavLink to="/settings" className="nav-link" onClick={() => setMobileNavOpen(false)}>
+                                <SettingsIcon size={18} className="icon" /> Settings
+                            </NavLink>
                         </div>
                     </div>
                 </>
