@@ -45,32 +45,14 @@ jobs:
           name: build-files
           path: dist/
       
-      - name: Deploy to Firebase Hosting
-        uses: firebase/firebase-tools-actions@v2
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
-          args: deploy --only hosting --project personal-management-dash-9b45a
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PERSONAL_MANAGEMENT_DASH_9B45A }}
       
-      - name: Deploy Firestore Rules
-        uses: firebase/firebase-tools-actions@v2
-        with:
-          args: deploy --only firestore:rules --project personal-management-dash-9b45a
+      - name: Deploy Firestore Rules, Indexes, and Functions
+        run: npx firebase-tools@latest deploy --only firestore:rules,firestore:indexes,functions --project personal-management-dash-9b45a --non-interactive
         env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-      
-      - name: Deploy Firestore Indexes
-        uses: firebase/firebase-tools-actions@v2
-        with:
-          args: deploy --only firestore:indexes --project personal-management-dash-9b45a
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-      
-      - name: Deploy Cloud Functions
-        uses: firebase/firebase-tools-actions@v2
-        with:
-          args: deploy --only functions --project personal-management-dash-9b45a
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+
