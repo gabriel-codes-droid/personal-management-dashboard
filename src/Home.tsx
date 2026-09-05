@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Circle, Square, Moon, ArrowUpRight, ArrowDownRight, Check, Clock,
+  Circle, ArrowUpRight, ArrowDownRight, Check, Clock,
 } from 'lucide-react';
+import { iconFromKey } from './notificationIcons';
 import { transactions as txApi, meals as mealApi, activities as actApi, Transaction, Meal, Activity, AppNotification } from './api';
 import { notificationService } from './notificationService';
 import {
@@ -187,49 +188,68 @@ function Home() {
 
             <div className="grid grid-4 mb-md">
                 <div className="kpi finance">
-                    <div className="kpi-icon"><Circle size={18} /></div>
-                    <div className="kpi-label">Total Balance</div>
-                    <div className="kpi-value" style={{ color: totalBalance >= 0 ? success : danger }}>
-                        ${Math.abs(totalBalance).toFixed(2)}
-                    </div>
-                    <div className="kpi-sub">
-                        <span className={'badge ' + (finLevel.color === success ? 'success' : finLevel.color === warning ? 'warning' : 'danger')}>
+                    <div className="kpi-header">
+                        <div className="kpi-label">Total Balance</div>
+                        <span className={'trend-badge ' + (totalBalance >= 0 ? 'up' : 'down')}>
+                            {totalBalance >= 0 ? <ArrowUpRight /> : <ArrowDownRight />}
                             {finLevel.label}
                         </span>
                     </div>
+                    <div className="kpi-value" style={{ color: totalBalance >= 0 ? success : danger }}>
+                        ${Math.abs(totalBalance).toFixed(2)}
+                    </div>
+                    <div className="kpi-trend">
+                        {totalBalance >= 0 ? <ArrowUpRight /> : <ArrowDownRight />}
+                        {totalBalance >= 0 ? 'Healthy balance' : 'Balance needs attention'}
+                    </div>
+                    <div className="kpi-desc">Across all accounts</div>
                 </div>
 
                 <div className="kpi meals">
-                    <div className="kpi-icon"><Circle size={18} /></div>
-                    <div className="kpi-label">Calories Today</div>
-                    <div className="kpi-value">{totalCals}</div>
-                    <div className="kpi-sub">
-                        <span className={'badge ' + (calLevel.color === success ? 'success' : calLevel.color === warning ? 'warning' : 'danger')}>
+                    <div className="kpi-header">
+                        <div className="kpi-label">Calories Today</div>
+                        <span className={'trend-badge ' + (calLevel.label === 'Healthy' ? 'up' : 'down')}>
+                            {calLevel.label === 'Healthy' ? <ArrowUpRight /> : <ArrowDownRight />}
                             {calLevel.label}
                         </span>
-                        <span className="muted"> · {meals.length} meals</span>
                     </div>
+                    <div className="kpi-value">{totalCals}</div>
+                    <div className="kpi-trend">
+                        {calLevel.label === 'Healthy' ? <ArrowUpRight /> : <ArrowDownRight />}
+                        {meals.length} meal{meals.length === 1 ? '' : 's'} logged
+                    </div>
+                    <div className="kpi-desc">Calories consumed today</div>
                 </div>
 
                 <div className="kpi activity">
-                    <div className="kpi-icon"><Square size={18} /></div>
-                    <div className="kpi-label">Activities</div>
-                    <div className="kpi-value">{doneActivities}<span className="muted" style={{ fontSize: 16, fontWeight: 500 }}> / {activities.length}</span></div>
-                    <div className="kpi-sub">
-                        <span className={'badge ' + (actLevel.color === success ? 'success' : actLevel.color === warning ? 'warning' : actLevel.color === danger ? 'danger' : 'info')}>
+                    <div className="kpi-header">
+                        <div className="kpi-label">Activities</div>
+                        <span className={'trend-badge ' + (doneActivities === activities.length && activities.length > 0 ? 'up' : 'down')}>
+                            {doneActivities === activities.length && activities.length > 0 ? <ArrowUpRight /> : <ArrowDownRight />}
                             {actLevel.label}
                         </span>
                     </div>
+                    <div className="kpi-value">{doneActivities}<span className="muted" style={{ fontSize: 16, fontWeight: 500 }}> / {activities.length}</span></div>
+                    <div className="kpi-trend">
+                        {doneActivities === activities.length && activities.length > 0 ? <ArrowUpRight /> : <ArrowDownRight />}
+                        {activities.length - doneActivities} remaining
+                    </div>
+                    <div className="kpi-desc">Tasks completed today</div>
                 </div>
 
                 <div className="kpi accent">
-                        <div className="kpi-icon"><Moon size={18} /></div>
-                    <div className="kpi-label">Income · Expense</div>
+                    <div className="kpi-header">
+                        <div className="kpi-label">Income · Expense</div>
+                        <span className={'trend-badge ' + (totalIncome >= totalExpense ? 'up' : 'down')}>
+                            {totalIncome >= totalExpense ? <ArrowUpRight /> : <ArrowDownRight />}
+                            {totalIncome >= totalExpense ? 'net positive' : 'net negative'}
+                        </span>
+                    </div>
                     <div className="kpi-value" style={{ fontSize: 18, display: 'flex', gap: 12, alignItems: 'baseline' }}>
                         <span style={{ color: success }}>+${totalIncome.toFixed(0)}</span>
                         <span style={{ color: danger }}>−${totalExpense.toFixed(0)}</span>
                     </div>
-                    <div className="kpi-sub muted">Lifetime totals</div>
+                    <div className="kpi-desc">Lifetime totals</div>
                 </div>
             </div>
 
@@ -325,7 +345,7 @@ function Home() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         {notifications.slice(0, 4).map((n, i) => (
                             <div key={i} className={'notif ' + n.type}>
-                                <div className="notif-icon">{n.icon}</div>
+                                <div className="notif-icon">{iconFromKey(n.icon)}</div>
                                 <div>
                                     <div className="notif-msg">{n.message}</div>
                                 </div>
